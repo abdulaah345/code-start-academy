@@ -6,43 +6,73 @@
 <title>Code Start</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#1b2a2f;--bg:#f6f7f4;--teal:#0f4c5c;--amber:#e09f3e;--line:#d9ddd6;--ok:#2e7d4f;--bad:#b3392f}
+:root{--ink:#eef0ff;--bg:#0b0d2a;--teal:#22d3ee;--violet:#7c5cff;--pink:#ff5fa2;--amber:#ffc83d;--line:rgba(255,255,255,.16);--ok:#34d399;--bad:#ff6b81;--card:rgba(255,255,255,.07)}
 *{box-sizing:border-box}
-body{margin:0;font-family:Cairo,Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
-main{max-width:760px;margin:0 auto;padding:20px 16px 80px}
-h1{font-size:1.7rem;margin:.2em 0;color:var(--teal);font-weight:800}
-h2{font-size:1.2rem;margin:1.2em 0 .4em;color:var(--teal)}
-.card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:16px;margin:12px 0}
-input,textarea,select{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:4px;background:#fff;margin:4px 0 10px}
+body{margin:0;font-family:Cairo,Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;min-height:100vh;overflow-x:hidden}
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:radial-gradient(circle at 20% 10%,#1b1f5e,transparent 55%),radial-gradient(circle at 85% 90%,#3a1459,transparent 55%)}
+.bg i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;animation:drift 14s ease-in-out infinite alternate}
+.bg i:nth-child(1){width:340px;height:340px;background:var(--violet);top:-80px;right:-60px}
+.bg i:nth-child(2){width:300px;height:300px;background:var(--teal);bottom:-80px;left:-60px;animation-delay:-5s}
+.bg i:nth-child(3){width:240px;height:240px;background:var(--pink);top:45%;left:40%;animation-delay:-9s;opacity:.28}
+.fl{position:fixed;inset:0;z-index:0;pointer-events:none}
+.fl span{position:absolute;font:700 1.7rem monospace;color:rgba(255,255,255,.13);direction:ltr;animation:float 9s ease-in-out infinite}
+main{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:20px 16px 80px}
+h1{font-size:1.7rem;margin:.2em 0;font-weight:800;background:linear-gradient(90deg,var(--teal),var(--violet),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:1.2rem;margin:1.2em 0 .4em;color:var(--amber)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;backdrop-filter:blur(10px);animation:up .55s both}
+main>*:nth-child(2){animation-delay:.08s}main>*:nth-child(3){animation-delay:.16s}main>*:nth-child(4){animation-delay:.24s}main>*:nth-child(n+5){animation-delay:.3s}
+input,textarea,select{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.08);color:var(--ink);margin:4px 0 10px;transition:border-color .2s,box-shadow .2s}
+input:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(34,211,238,.25)}
 textarea{min-height:200px;direction:rtl}
-button{font:inherit;font-weight:600;background:var(--teal);color:#fff;border:0;border-radius:4px;padding:10px 18px;cursor:pointer}
-button.alt{background:#fff;color:var(--teal);border:1px solid var(--teal)}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--amber)}
-.muted{color:#5d6b6f;font-size:.9rem}
+button{font:inherit;font-weight:700;background:linear-gradient(135deg,var(--violet),var(--pink));color:#fff;border:0;border-radius:12px;padding:11px 22px;cursor:pointer;transition:transform .2s,box-shadow .2s}
+button:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(255,95,162,.4)}
+button:active{transform:scale(.97)}
+button.alt{background:transparent;color:var(--teal);border:1px solid var(--teal)}
+button.alt:hover{box-shadow:0 8px 22px rgba(34,211,238,.3)}
+#go{animation:pulse 2s infinite}
+.muted{color:rgba(238,240,255,.68);font-size:.9rem}
 .err{color:var(--bad);font-weight:600}
-.q{border-right:4px solid var(--line);padding-right:12px}
+.q{border-right:5px solid var(--line);transition:border-color .3s}
 .q.done{border-color:var(--teal)}
-.opt{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:4px;cursor:pointer}
-.opt:hover{background:#eef2ee}
-.opt input{width:auto;margin:6px 0 0}
-#bar{position:sticky;top:0;background:var(--teal);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:700;z-index:5}
-#bar.low{background:var(--bad)}
-table{width:100%;border-collapse:collapse;background:#fff}
-th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right}
-th{background:#eef2ee}
-tr.me td{background:#fff3da;font-weight:700}
-.big{font-size:3rem;font-weight:800;color:var(--teal);line-height:1.1}
-.brand{text-align:center;padding:22px 0 8px}
-.logo{display:inline-block;font-size:2.3rem;font-weight:800;color:var(--teal);direction:ltr;border-bottom:5px solid var(--amber);padding:0 6px}
-.wel{font-size:1.15rem;font-weight:600;margin:12px 0 0}
-a.ex{display:flex;justify-content:space-between;gap:10px;text-decoration:none;color:inherit}
-a.ex:hover{border-color:var(--teal)}
-pre{background:#1b2a2f;color:#e8efe9;padding:12px;border-radius:4px;overflow:auto;direction:ltr;text-align:left;font-size:.8rem}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:background .2s,transform .15s}
+.opt:hover{background:rgba(255,255,255,.09);transform:translateX(-3px)}
+.opt:has(input:checked){background:rgba(124,92,255,.3);border-color:var(--violet)}
+.opt input{width:auto;margin:6px 0 0;accent-color:var(--pink)}
+#bar{position:sticky;top:0;background:linear-gradient(90deg,var(--violet),var(--pink));color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:700;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+#bar.low{background:var(--bad);animation:pulse 1s infinite}
+#prog{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.25)}
+#pf{display:block;height:100%;width:0;background:var(--amber);transition:width .4s;box-shadow:0 0 10px var(--amber)}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right}
+th{background:rgba(255,255,255,.1);color:var(--teal)}
+tr{animation:slide .5s both;animation-delay:calc(var(--i,0)*70ms)}
+tr.me td{background:rgba(255,200,61,.22);font-weight:700}
+.big{font-size:4rem;font-weight:800;line-height:1.1;background:linear-gradient(90deg,var(--amber),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;animation:pop .7s both}
+pre{background:#05061a;color:#e8efe9;padding:12px;border-radius:10px;overflow:auto;direction:ltr;text-align:left;font-size:.8rem}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.brand{text-align:center;padding:22px 0 8px}
+.logo{display:inline-block;font-size:2.4rem;font-weight:800;direction:ltr;padding:0 8px;background:linear-gradient(90deg,var(--teal),var(--violet),var(--pink),var(--teal));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 4s linear infinite;filter:drop-shadow(0 0 14px rgba(124,92,255,.7));border-bottom:5px solid var(--amber)}
+.wel{font-size:1.15rem;font-weight:600;margin:12px 0 0;animation:up .8s .2s both}
+a.ex{display:flex;justify-content:space-between;gap:10px;text-decoration:none;color:inherit;transition:transform .25s,border-color .25s,box-shadow .25s}
+a.ex:hover{transform:translateY(-5px);border-color:var(--teal);box-shadow:0 10px 26px rgba(34,211,238,.25)}
+.cf{position:fixed;top:-14px;width:9px;height:14px;z-index:50;animation:fall linear forwards}
+#errbar{position:fixed;bottom:0;left:0;right:0;background:#b3392f;color:#fff;padding:8px 12px;font-size:.8rem;direction:ltr;text-align:left;display:none;z-index:99}
+@keyframes up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+@keyframes shine{to{background-position:200% 0}}
+@keyframes pulse{50%{box-shadow:0 0 0 10px rgba(255,95,162,0)}0%{box-shadow:0 0 0 0 rgba(255,95,162,.6)}}
+@keyframes drift{to{transform:translate(60px,50px) scale(1.15)}}
+@keyframes float{50%{transform:translateY(-28px) rotate(8deg)}}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+<div class="bg"><i></i><i></i><i></i></div>
+<div class="fl"><span style="left:6%;top:18%">&lt;/&gt;</span><span style="left:84%;top:12%;animation-delay:-2s">{ }</span><span style="left:12%;top:70%;animation-delay:-4s">=&gt;</span><span style="left:78%;top:62%;animation-delay:-6s">( )</span><span style="left:46%;top:86%;animation-delay:-3s">;</span><span style="left:92%;top:84%;animation-delay:-7s">[ ]</span></div>
 <main id="app"></main>
+<div id="errbar"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -62,9 +92,12 @@ const SITE_URL = 'https://velvety-sprinkles-75fa39.netlify.app/';
 // ===============================================
 
 const $app = document.getElementById('app');
+const showErr = m => { const b = document.getElementById('errbar'); b.style.display = 'block'; b.textContent = 'Error: ' + m; };
+addEventListener('error', e => showErr(e.message));
+addEventListener('unhandledrejection', e => showErr(String((e.reason && e.reason.message) || e.reason)));
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const params = new URLSearchParams(location.search);
-let db, auth, timerId = null, parsedQs = [];
+let db, auth, timerId = null, parsedQs = [], lastIds = new Set();
 
 const RULES = `rules_version = '2';
 service cloud.firestore {
@@ -195,7 +228,10 @@ async function home() {
 }
 async function student(id) {
   const ref = db.collection('exams').doc(id);
-  const snap = await ref.get();
+  $app.innerHTML = WELCOME + '<p class="muted" style="text-align:center">جاري تحميل الامتحان...</p>';
+  const slow = setTimeout(() => { $app.innerHTML = WELCOME + '<p class="err" style="text-align:center">الاتصال بطيء أو متحجب. افتح اللينك في Chrome، أو بدّل بين الواي فاي وداتا الموبايل، وجرّب تاني.</p>'; }, 12000);
+  let snap;
+  try { snap = await ref.get(); } finally { clearTimeout(slow); }
   if (!snap.exists) { $app.innerHTML = '<h1>الامتحان غير موجود</h1><p class="muted">اتأكد من اللينك اللي بعتهولك المدرس.</p>'; return; }
   const exam = snap.data();
   const key = 'exam_' + id;
@@ -208,19 +244,29 @@ async function student(id) {
     }
   }
   if (exam.open === false) { $app.innerHTML = WELCOME + '<h1>الامتحان مغلق</h1><p class="muted">الامتحان ده اتقفل. كلم المدرس.</p>'; return; }
+  const roster = exam.roster || [], hasCodes = roster.some(r => r.c);
   $app.innerHTML = WELCOME + `<h1>${esc(exam.title)}</h1>
    <div class="card"><p>${exam.questions.length} سؤال · ${exam.minutes} دقيقة</p>
-   <label>اسمك بالكامل</label><input id="nm" autocomplete="name">
+   ${roster.length ? '<label>اختار اسمك من القايمة</label><select id="nm"><option value="">— اختار —</option>' + roster.map((r, i) => '<option value="' + i + '">' + esc(r.n) + '</option>').join('') + '</select>' + (hasCodes ? '<label>الكود بتاعك</label><input id="cd" inputmode="numeric" autocomplete="off">' : '') : '<label>اسمك بالكامل</label><input id="nm" autocomplete="name">'}
    <p class="muted">العداد بيبدأ أول ما تضغط ابدأ، ولو عملت ريفرش هتكمل من مكانك. خروجك من صفحة الامتحان بيتسجل للمدرس.</p>
    <button id="go">ابدأ الامتحان</button><p id="e" class="err"></p></div>`;
   document.getElementById('go').onclick = async () => {
-    const name = document.getElementById('nm').value.trim();
-    if (name.length < 3) { document.getElementById('e').textContent = 'اكتب اسمك بالكامل.'; return; }
+    const v = document.getElementById('nm').value.trim(), eb = document.getElementById('e');
+    let name, id = null;
+    if (roster.length) {
+      if (v === '') { eb.textContent = 'اختار اسمك من القايمة.'; return; }
+      const r = roster[+v]; name = r.n; id = 'r' + v;
+      if (r.c && document.getElementById('cd').value.trim() !== String(r.c)) { eb.textContent = 'الكود غلط.'; return; }
+    } else { name = v; if (name.length < 3) { eb.textContent = 'اكتب اسمك بالكامل.'; return; } }
     const data = { name, status: 'in_progress', startedAt: Date.now(), order: shuffle(exam.questions.length), answers: {}, leaves: 0,
       oo: Object.fromEntries(exam.questions.map((q, i) => [i, shuffle(q.options.length)])) };
-    const r = await ref.collection('results').add(data);
-    localStorage.setItem(key, JSON.stringify({ rid: r.id }));
-    runExam(ref, exam, r.id, data, key);
+    let rid, rd = data;
+    if (id) {
+      const old = await ref.collection('results').doc(id).get();
+      if (old.exists) { rid = id; rd = old.data(); } else { await ref.collection('results').doc(id).set(data); rid = id; }
+    } else { rid = (await ref.collection('results').add(data)).id; }
+    localStorage.setItem(key, JSON.stringify({ rid }));
+    return rd.status === 'done' ? showResult(ref, exam, rid, rd) : runExam(ref, exam, rid, rd, key);
   };
 }
 
@@ -228,11 +274,12 @@ function runExam(ref, exam, rid, data, key) {
   const end = data.startedAt + exam.minutes * 60000;
   const answers = data.answers || {};
   let finished = false, t, leaves = data.leaves || 0;
-  const onHide = () => { if (document.hidden && !finished) { leaves++; ref.collection('results').doc(rid).update({ leaves }).catch(() => {}); } };
+  const onHide = () => { if (document.hidden && !finished) { leaves++; ref.collection('results').doc(rid).update({ leaves, answers }).catch(() => {}); } };
   document.addEventListener('visibilitychange', onHide);
-  $app.innerHTML = `<div id="bar" style="margin:-20px -16px 16px"><span>${esc(data.name)}</span><span id="tm"></span></div>
+  $app.innerHTML = `<div id="bar" style="margin:-20px -16px 16px"><span>${esc(data.name)}</span><span id="tm"></span><div id="prog"><i id="pf"></i></div></div>
    <div id="qs"></div><button id="fin">تسليم الامتحان</button> <span id="sv" class="muted"></span>`;
   const qs = document.getElementById('qs');
+  const prog = () => { document.getElementById('pf').style.width = (Object.keys(answers).length / exam.questions.length * 100) + '%'; }; prog();
   data.order.forEach((qi, pos) => {
     const q = exam.questions[qi];
     const d = document.createElement('div');
@@ -240,9 +287,10 @@ function runExam(ref, exam, rid, data, key) {
     d.innerHTML = `<b>${pos + 1}. ${esc(q.q)}</b>` + ((data.oo && data.oo[qi]) || q.options.map((_, k) => k)).map(oi =>
       `<label class="opt"><input type="radio" name="q${qi}" value="${oi}" ${answers[qi] === oi ? 'checked' : ''}><span>${esc(q.options[oi])}</span></label>`).join('');
     d.onchange = e => {
-      answers[qi] = +e.target.value; d.classList.add('done');
+      answers[qi] = +e.target.value; d.classList.add('done'); prog();
       clearTimeout(t);
-      t = setTimeout(() => ref.collection('results').doc(rid).update({ answers }).then(() => document.getElementById('sv').textContent = 'تم الحفظ'), 400);
+      document.getElementById('sv').textContent = '';
+      t = setTimeout(() => ref.collection('results').doc(rid).update({ answers }).then(() => document.getElementById('sv').textContent = 'تم حفظ إجاباتك'), 20000);
     };
     qs.appendChild(d);
   });
@@ -263,10 +311,18 @@ function runExam(ref, exam, rid, data, key) {
   tick(); timerId = setInterval(tick, 1000);
 }
 
+function confetti() {
+  const c = ['#7c5cff', '#ff5fa2', '#22d3ee', '#ffc83d', '#34d399'];
+  for (let i = 0; i < 70; i++) {
+    const e = document.createElement('i'); e.className = 'cf';
+    e.style.cssText = `left:${Math.random() * 100}vw;background:${c[i % 5]};animation-duration:${2 + Math.random() * 2.5}s;animation-delay:${Math.random() * .6}s`;
+    document.body.appendChild(e); setTimeout(() => e.remove(), 5500);
+  }
+}
 async function showResult(ref, exam, rid, d) {
   const pct = Math.round(d.score / d.total * 100);
   let html = `<h1>${esc(exam.title)}</h1><div class="card"><p>${esc(d.name)}</p>
-   <div class="big">${d.score} / ${d.total}</div><p class="muted">${pct}%</p></div>`;
+   <div class="big" id="sc">0 / ${d.total}</div><p class="muted">${pct}%</p></div>`;
   if (exam.showReview !== false) {
     const wrong = exam.questions.map((q, i) => ({ q, a: (d.answers || {})[i] })).filter(x => x.a !== x.q.correct);
     if (wrong.length) html += '<h2>مراجعة الأسئلة اللي غلطت فيها</h2>' + wrong.map(x => `<div class="card q"><b>${esc(x.q.q)}</b>
@@ -276,20 +332,27 @@ async function showResult(ref, exam, rid, d) {
     else html += '<p style="color:var(--ok);font-weight:700">جاوبت كل الأسئلة صح، ممتاز!</p>';
   }
   if (exam.showBoard) {
-    const rs = await boardData(ref);
-    html += `<h2>الترتيب</h2>` + boardTable(rs, rid);
+    const rs = await boardData(ref, true);
+    html += `<h2>أعلى 10 طلاب</h2>` + boardTable(rs, rid);
+    if (!rs.some(r => r.id === rid)) html += `<p class="muted">درجتك ${d.score}/${d.total}، وإنت خارج أول 10 المرة دي. كمّل، التقدم بيبان.</p>`;
   }
   $app.innerHTML = html;
+  const el = document.getElementById('sc'), t0 = Date.now();
+  const step = () => { const k = Math.min(1, (Date.now() - t0) / 1000); el.textContent = Math.round(d.score * k) + ' / ' + d.total; if (k < 1) requestAnimationFrame(step); };
+  step(); if (pct >= 60) confetti();
 }
 
-async function boardData(ref) {
-  const s = await ref.collection('results').get();
-  return s.docs.map(x => ({ id: x.id, ...x.data() })).filter(x => x.status === 'done')
+async function boardData(ref, top) {
+  const q = top ? ref.collection('results').orderBy('score', 'desc').limit(30) : ref.collection('results');
+  const s = await q.get();
+  lastIds = new Set(s.docs.map(x => x.id));
+  const rs = s.docs.map(x => ({ id: x.id, ...x.data() })).filter(x => x.status === 'done')
     .sort((a, b) => b.score - a.score || (a.finishedAt - a.startedAt) - (b.finishedAt - b.startedAt));
+  return top ? rs.slice(0, 10) : rs;
 }
 function boardTable(rs, me, adm) {
   return `<table><tr><th>#</th><th>الاسم</th><th>الدرجة</th><th>الوقت</th>${adm ? '<th>خرج من الصفحة</th>' : ''}</tr>` + rs.map((r, i) =>
-    `<tr class="${r.id === me ? 'me' : ''}"><td>${i + 1}</td><td>${esc(r.name)}</td><td>${r.score}/${r.total}</td><td>${fmt(r.finishedAt - r.startedAt)}</td>${adm ? '<td>' + (r.leaves || 0) + ' مرة</td>' : ''}</tr>`).join('') + `</table>`;
+    `<tr class="${r.id === me ? 'me' : ''}" style="--i:${i}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td><td>${esc(r.name)}</td><td>${r.score}/${r.total}</td><td>${fmt(r.finishedAt - r.startedAt)}</td>${adm ? '<td>' + (r.leaves || 0) + ' مرة</td>' : ''}</tr>`).join('') + `</table>`;
 }
 
 // ---------- teacher ----------
@@ -312,6 +375,7 @@ async function dashboard() {
    <label>المدة بالدقايق</label><input id="mn" type="number" value="30" min="1">
    <label>الصق الأسئلة هنا بأي شكل. المنصة بتتعرف لوحدها على الاختيارات (أ ب ج د) والإجابة الصحيحة والشرح، وبتعرضلك معاينة تراجعها قبل النشر.</label>
    <textarea id="qt" placeholder="ايه ناتج 2+2؟&#10;3&#10;*4&#10;5&#10;&#10;أي لغة تستخدم للويب؟&#10;*JavaScript&#10;COBOL"></textarea>
+   <label>قايمة الطلاب المسموح لهم (اختياري). اسم في كل سطر، ولو عايز كود لكل طالب اكتب: الاسم | الكود. لو سبتها فاضية أي حد يدخل بأي اسم.</label><textarea id="ro" style="min-height:110px"></textarea>
    <label class="opt"><input type="checkbox" id="sb" checked><span>اظهر الترتيب للطلاب بعد التسليم</span></label>
    <label class="opt"><input type="checkbox" id="sr" checked><span>اظهر للطالب الإجابة الصح والشرح للأسئلة اللي غلط فيها</span></label>
    <div id="sk"></div><div id="pv"></div>
@@ -344,13 +408,15 @@ async function dashboard() {
     const questions = parsedQs, title = ti.value.trim();
     if (!title || !questions.length) { e.textContent = 'اكتب العنوان وسؤال واحد على الأقل (مع علامة * على الإجابة الصح).'; return; }
     if (questions.some(q => q.correct < 0)) { e.textContent = 'في أسئلة لسه من غير إجابة صحيحة. علّمها من المعاينة.'; return; }
-    await db.collection('exams').add({ title, minutes: +mn.value || 30, questions, showBoard: sb.checked, showReview: sr.checked, createdAt: Date.now() });
+    await db.collection('exams').add({ title, minutes: +mn.value || 30, questions, roster: document.getElementById('ro').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [n, c] = l.split(/\s*[|\t,،]\s*/); return { n: n.trim(), c: (c || '').trim() }; }), showBoard: sb.checked, showReview: sr.checked, createdAt: Date.now() });
     dashboard();
   };
   $app.querySelectorAll('[data-r]').forEach(b => b.onclick = async () => {
     const id = b.dataset.r, ref = db.collection('exams').doc(id), rs = await boardData(ref);
-    const prog = (await ref.collection('results').get()).size - rs.length;
-    document.getElementById('res').innerHTML = `<h2>نتائج الامتحان</h2><p class="muted">سلّم ${rs.length} · لسه بيحلوا ${prog}</p>${boardTable(rs, '', true)}<br><button id="csv">تحميل CSV</button>`;
+    const prog = lastIds.size - rs.length, exm = (await ref.get()).data();
+    const absent = (exm.roster || []).map((r, i) => ({ r, i })).filter(x => !lastIds.has('r' + x.i)).map(x => x.r.n);
+    const absentHtml = (exm.roster || []).length ? `<p class="muted">لسه ما بدأوش (${absent.length}): ${esc(absent.join('، ') || 'محدش')}</p>` : '';
+    document.getElementById('res').innerHTML = `<h2>نتائج الامتحان</h2><p class="muted">سلّم ${rs.length} · لسه بيحلوا ${prog}</p>${absentHtml}${boardTable(rs, '', true)}<br><button id="csv">تحميل CSV</button>`;
     document.getElementById('csv').onclick = () => {
       const c = '\uFEFF#,الاسم,الدرجة,من,الوقت,الخروج من الصفحة\n' + rs.map((r, i) => [i + 1, '"' + r.name.replace(/"/g, '""') + '"', r.score, r.total, fmt(r.finishedAt - r.startedAt), r.leaves || 0].join(',')).join('\n');
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c], { type: 'text/csv' })); a.download = 'results.csv'; a.click();
@@ -368,9 +434,10 @@ async function dashboard() {
 
 // ---------- boot ----------
 if (!firebaseConfig.projectId) setup();
+else if (typeof firebase === 'undefined') $app.innerHTML = WELCOME + '<p class="err" style="text-align:center">تعذر تحميل مكتبات Firebase. اتأكد من النت أو اقفل أي حاجب إعلانات وجرب تاني.</p>';
 else {
-  firebase.initializeApp(firebaseConfig); db = firebase.firestore(); auth = firebase.auth();
-  if (params.has('exam')) student(params.get('exam')).catch(e => $app.innerHTML = '<p class="err">حصل خطأ: ' + esc(e.message) + '</p>');
+  firebase.initializeApp(firebaseConfig); db = firebase.firestore(); db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); auth = firebase.auth();
+  if (params.has('exam')) student(params.get('exam')).catch(e => $app.innerHTML = WELCOME + '<p class="err">تعذر تحميل الامتحان: ' + esc(e.message) + '</p><button onclick="location.reload()">حاول تاني</button>');
   else if (params.has('admin')) auth.onAuthStateChanged(u => u ? dashboard() : login());
   else home().catch(e => $app.innerHTML = '<p class="err">حصل خطأ: ' + esc(e.message) + '</p>');
 }
