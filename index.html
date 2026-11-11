@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Code Start</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1b2a2f;--bg:#f6f7f4;--teal:#0f4c5c;--amber:#e09f3e;--line:#d9ddd6;--ok:#2e7d4f;--bad:#b3392f}
+*{box-sizing:border-box}
+body{margin:0;font-family:Cairo,Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+main{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+h1{font-size:1.7rem;margin:.2em 0;color:var(--teal);font-weight:800}
+h2{font-size:1.2rem;margin:1.2em 0 .4em;color:var(--teal)}
+.card{background:#fff;border:1px solid var(--line);border-radius:6px;padding:16px;margin:12px 0}
+input,textarea,select{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:4px;background:#fff;margin:4px 0 10px}
+textarea{min-height:200px;direction:rtl}
+button{font:inherit;font-weight:600;background:var(--teal);color:#fff;border:0;border-radius:4px;padding:10px 18px;cursor:pointer}
+button.alt{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--amber)}
+.muted{color:#5d6b6f;font-size:.9rem}
+.err{color:var(--bad);font-weight:600}
+.q{border-right:4px solid var(--line);padding-right:12px}
+.q.done{border-color:var(--teal)}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:4px;cursor:pointer}
+.opt:hover{background:#eef2ee}
+.opt input{width:auto;margin:6px 0 0}
+#bar{position:sticky;top:0;background:var(--teal);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:700;z-index:5}
+#bar.low{background:var(--bad)}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right}
+th{background:#eef2ee}
+tr.me td{background:#fff3da;font-weight:700}
+.big{font-size:3rem;font-weight:800;color:var(--teal);line-height:1.1}
+.brand{text-align:center;padding:22px 0 8px}
+.logo{display:inline-block;font-size:2.3rem;font-weight:800;color:var(--teal);direction:ltr;border-bottom:5px solid var(--amber);padding:0 6px}
+.wel{font-size:1.15rem;font-weight:600;margin:12px 0 0}
+a.ex{display:flex;justify-content:space-between;gap:10px;text-decoration:none;color:inherit}
+a.ex:hover{border-color:var(--teal)}
+pre{background:#1b2a2f;color:#e8efe9;padding:12px;border-radius:4px;overflow:auto;direction:ltr;text-align:left;font-size:.8rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<main id="app"></main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script>
+// ====== الصق إعدادات Firebase بتاعتك هنا ======
+const firebaseConfig = {
+  apiKey: "AIzaSyCUXFctBiuGKm45uF6qkmWOO6qtuoZI0wI",
+  authDomain: "code-start-academy-b7893.firebaseapp.com",
+  projectId: "code-start-academy-b7893",
+  storageBucket: "code-start-academy-b7893.firebasestorage.app",
+  messagingSenderId: "925702759372",
+  appId: "1:925702759372:web:c3d02e7b6d25a541463369"
+};
+// لينك موقعك على Netlify (بيتستخدم في اللينكات اللي بتتبعت للطلاب)
+const SITE_URL = 'https://velvety-sprinkles-75fa39.netlify.app/';
+// ===============================================
+
+const $app = document.getElementById('app');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const params = new URLSearchParams(location.search);
+let db, auth, timerId = null, parsedQs = [];
+
+const RULES = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /exams/{exam} {
+      allow read: if true;
+      allow write: if request.auth != null;
+      match /results/{r} {
+        allow read: if true;
+        allow create: if true;
+        allow update: if resource.data.status == 'in_progress';
+        allow delete: if request.auth != null;
+      }
+    }
+  }
+}`;
+
+function setup() {
+  $app.innerHTML = `<h1>إعداد المنصة</h1>
+  <div class="card"><p>لسه ما ربطتش Firebase. اعمل الخطوات دي مرة واحدة:</p>
+  <ol>
+   <li>ادخل <b>console.firebase.google.com</b> واعمل مشروع جديد (مجاني).</li>
+   <li>Build ← <b>Firestore Database</b> ← Create database (Production mode).</li>
+   <li>Build ← <b>Authentication</b> ← Sign-in method ← فعّل <b>Email/Password</b>، وبعدين من Users اضف حساب بإيميلك وباسورد (ده دخولك كمدرس).</li>
+   <li>في Firestore ← Rules الصق القواعد دي واضغط Publish:</li></ol>
+  <pre>${esc(RULES)}</pre>
+  <ol start="5"><li>Project settings ← Your apps ← Web app (&lt;/&gt;) وانسخ firebaseConfig والصقه في أول الملف مكان الفاضي.</li>
+  <li>ارفع الملف على GitHub Pages أو Netlify Drop، وافتح <b>?admin</b> في آخر اللينك.</li></ol></div>`;
+}
+
+// ---------- parsing ----------
+const LET = {'أ':0,'ا':0,'إ':0,'ب':1,'ج':2,'د':3,'A':0,'B':1,'C':2,'D':3,'a':0,'b':1,'c':2,'d':3};
+const OPT_RE = /^\(?([أاإبجدA-Da-d])[\)\.]\s*(.*)$/;
+const ANS_MARK = /\(?\s*الإجابة\s+الصحيحة[^)\n]*\)?/;
+function parseSmart(text) {
+  const all = []; let cur = null, inl = {};
+  const mk = q => { cur = { q, options: [], correct: -1, exp: '', base: 0 }; all.push(cur); return cur; };
+  for (const raw of text.replace(/&#x20;|&nbsp;/g, ' ').split('\n')) {
+    let l = raw.replace(/\*\*|__/g, '').replace(/^\s*#+\s*/, '').trim();
+    l = l.replace(/^[-•]\s+/, '').replace(/^\*\s+/, '').trim();
+    if (!/[\u0600-\u06FFA-Za-z0-9]/.test(l) || /^!\[/.test(l) || /^image_\S*\.(png|jpe?g|webp)$/i.test(l)) continue;
+    const star = /^\*/.test(l); if (star) l = l.slice(1).trim();
+    let m = l.match(/^السؤال[^:：]{0,20}[:：]\s*(.*)$/);
+    if (m) { cur = null; l = m[1].trim(); if (!l) continue; }
+    l = l.replace(/^(?:ال|ل)?نص\s*[:：]\s*/, '');
+    if (!l) continue;
+    if (/^الإجابات\s*[:：]/.test(l)) {
+      for (const k of l.matchAll(/(\d+)\s*[-–]\s*([أاإبجد])/g)) if (inl[k[1]]) inl[k[1]].correct = LET[k[2]];
+      inl = {}; continue;
+    }
+    m = l.match(/^الإجابة(?:\s+الصحيحة)?\s*[:：]\s*(.*)$/);
+    if (m) {
+      const r = m[1].match(/^\(?([أاإبجد])[\)\.]?(?:\s|$)(.*)$/);
+      if (r && cur) {
+        cur.correct = LET[r[1]];
+        const g = [...r[2].matchAll(/\(([^()]*)\)/g)].map(x => x[1].trim()).filter(Boolean).join(' ').replace(/[\.\s]+$/, '');
+        if (g) cur.exp = g;
+      }
+      continue;
+    }
+    m = l.match(/^(?:شرح|التوضيح|توضيح|التفسير)\s*[:：]\s*(.+)$/);
+    if (m) { if (cur) cur.exp = m[1].trim(); continue; }
+    const marks = l.match(/\([أاإبجد]\)/g);
+    if (marks && marks.length >= 3 && !OPT_RE.test(l)) {
+      const parts = l.split(/\(([أاإبجد])\)/);
+      let pre = parts[0].trim(), qn = null;
+      const nm = pre.match(/^(\d+)\s*[\.\)\-]\s*(.*)$/); if (nm) { qn = nm[1]; pre = nm[2]; }
+      const q = mk(pre);
+      for (let i = 1; i < parts.length; i += 2) q.options.push((parts[i + 1] || '').trim());
+      if (qn) inl[qn] = q;
+      continue;
+    }
+    m = l.match(OPT_RE);
+    if (m) {
+      const li = LET[m[1]];
+      if (!cur || li !== cur.base + cur.options.length) { mk(''); cur.base = li; }
+      let t = m[2], ok = star;
+      if (ANS_MARK.test(t)) { ok = true; t = t.replace(ANS_MARK, ''); }
+      if (/[✅✔✓☑]/.test(t)) { ok = true; t = t.replace(/[✅✔✓☑]\uFE0F?/g, ''); }
+      cur.options.push(t.trim());
+      if (ok) cur.correct = cur.options.length - 1;
+      continue;
+    }
+    if (!cur || cur.options.length) mk(l.replace(/^\d+\s*[\.\)\-]\s+/, ''));
+    else cur.q += ' ' + l;
+  }
+  const qs = [], skipped = [];
+  all.forEach(q => {
+    if (!q.options.length) return;
+    const lb = (q.q || '').slice(0, 45);
+    if (!q.q) skipped.push('اختيارات بدون سؤال');
+    else if (q.options.length < 2) skipped.push(lb + ' — اختيارات ناقصة');
+    else qs.push({ q: q.q, options: q.options, correct: (q.correct >= 0 && q.correct < q.options.length) ? q.correct : -1, exp: q.exp || '' });
+  });
+  return { qs, skipped };
+}
+function parseSimple(t) {
+  return t.trim().split(/\n\s*\n/).map(b => {
+    const l = b.split('\n').map(s => s.trim()).filter(Boolean);
+    const q = (l.shift() || '').replace(/^\d+\s*[\)\.\-]\s*/, '');
+    let correct = -1, exp = '';
+    const options = [];
+    l.forEach(s => {
+      const e = s.match(/^(?:شرح|توضيح)\s*[:：]\s*(.+)$/); if (e) { exp = e[1]; return; }
+      if (s.startsWith('*')) { correct = options.length; s = s.slice(1).trim(); }
+      options.push(s.replace(/^[A-Da-dأ-د]\s*[\)\.\-]\s*/, ''));
+    });
+    return { q, options, correct, exp };
+  }).filter(x => x.q && x.options.length >= 2 && x.correct >= 0);
+}
+function parseQuestions(t) {
+  const a = parseSmart(t), b = parseSimple(t);
+  return a.qs.length >= b.length ? a : { qs: b, skipped: [] };
+}
+const shuffle = n => { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const fmt = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+
+// ---------- home & student ----------
+const WELCOME = `<div class="brand"><div class="logo">&lt;/&gt; Code Start</div>
+  <p class="wel">أهلًا بيكم في Code Start مع بشمهندس عبدالله محمد<br>وأتمنى لكم التوفيق جميعًا</p></div>`;
+async function home() {
+  $app.innerHTML = WELCOME + '<p class="muted" style="text-align:center">جاري تحميل الامتحانات...</p>';
+  const snap = await db.collection('exams').orderBy('createdAt', 'desc').get();
+  const ex = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(x => x.open !== false);
+  $app.innerHTML = WELCOME + (ex.length ? '<h2>الامتحانات المتاحة</h2>' + ex.map(x =>
+    `<a class="card ex" href="?exam=${x.id}"><b>${esc(x.title)}</b><span class="muted">${x.questions.length} سؤال · ${x.minutes} دقيقة</span></a>`).join('')
+    : '<p class="muted" style="text-align:center">مفيش امتحانات متاحة دلوقتي.</p>');
+}
+async function student(id) {
+  const ref = db.collection('exams').doc(id);
+  const snap = await ref.get();
+  if (!snap.exists) { $app.innerHTML = '<h1>الامتحان غير موجود</h1><p class="muted">اتأكد من اللينك اللي بعتهولك المدرس.</p>'; return; }
+  const exam = snap.data();
+  const key = 'exam_' + id;
+  const saved = JSON.parse(localStorage.getItem(key) || 'null');
+  if (saved) {
+    const r = await ref.collection('results').doc(saved.rid).get();
+    if (r.exists) {
+      const d = r.data();
+      return d.status === 'done' ? showResult(ref, exam, saved.rid, d) : runExam(ref, exam, saved.rid, d, key);
+    }
+  }
+  if (exam.open === false) { $app.innerHTML = WELCOME + '<h1>الامتحان مغلق</h1><p class="muted">الامتحان ده اتقفل. كلم المدرس.</p>'; return; }
+  $app.innerHTML = WELCOME + `<h1>${esc(exam.title)}</h1>
+   <div class="card"><p>${exam.questions.length} سؤال · ${exam.minutes} دقيقة</p>
+   <label>اسمك بالكامل</label><input id="nm" autocomplete="name">
+   <p class="muted">العداد بيبدأ أول ما تضغط ابدأ، ولو عملت ريفرش هتكمل من مكانك. خروجك من صفحة الامتحان بيتسجل للمدرس.</p>
+   <button id="go">ابدأ الامتحان</button><p id="e" class="err"></p></div>`;
+  document.getElementById('go').onclick = async () => {
+    const name = document.getElementById('nm').value.trim();
+    if (name.length < 3) { document.getElementById('e').textContent = 'اكتب اسمك بالكامل.'; return; }
+    const data = { name, status: 'in_progress', startedAt: Date.now(), order: shuffle(exam.questions.length), answers: {}, leaves: 0,
+      oo: Object.fromEntries(exam.questions.map((q, i) => [i, shuffle(q.options.length)])) };
+    const r = await ref.collection('results').add(data);
+    localStorage.setItem(key, JSON.stringify({ rid: r.id }));
+    runExam(ref, exam, r.id, data, key);
+  };
+}
+
+function runExam(ref, exam, rid, data, key) {
+  const end = data.startedAt + exam.minutes * 60000;
+  const answers = data.answers || {};
+  let finished = false, t, leaves = data.leaves || 0;
+  const onHide = () => { if (document.hidden && !finished) { leaves++; ref.collection('results').doc(rid).update({ leaves }).catch(() => {}); } };
+  document.addEventListener('visibilitychange', onHide);
+  $app.innerHTML = `<div id="bar" style="margin:-20px -16px 16px"><span>${esc(data.name)}</span><span id="tm"></span></div>
+   <div id="qs"></div><button id="fin">تسليم الامتحان</button> <span id="sv" class="muted"></span>`;
+  const qs = document.getElementById('qs');
+  data.order.forEach((qi, pos) => {
+    const q = exam.questions[qi];
+    const d = document.createElement('div');
+    d.className = 'card q' + (answers[qi] !== undefined ? ' done' : '');
+    d.innerHTML = `<b>${pos + 1}. ${esc(q.q)}</b>` + ((data.oo && data.oo[qi]) || q.options.map((_, k) => k)).map(oi =>
+      `<label class="opt"><input type="radio" name="q${qi}" value="${oi}" ${answers[qi] === oi ? 'checked' : ''}><span>${esc(q.options[oi])}</span></label>`).join('');
+    d.onchange = e => {
+      answers[qi] = +e.target.value; d.classList.add('done');
+      clearTimeout(t);
+      t = setTimeout(() => ref.collection('results').doc(rid).update({ answers }).then(() => document.getElementById('sv').textContent = 'تم الحفظ'), 400);
+    };
+    qs.appendChild(d);
+  });
+  const finish = async () => {
+    if (finished) return; finished = true; clearInterval(timerId); document.removeEventListener('visibilitychange', onHide);
+    let score = 0; exam.questions.forEach((q, i) => { if (answers[i] === q.correct) score++; });
+    const upd = { status: 'done', answers, score, total: exam.questions.length, finishedAt: Date.now() };
+    await ref.collection('results').doc(rid).update(upd);
+    showResult(ref, exam, rid, { ...data, ...upd });
+  };
+  document.getElementById('fin').onclick = () => { if (confirm('تأكيد تسليم الامتحان؟')) finish(); };
+  const tick = () => {
+    const left = end - Date.now();
+    document.getElementById('tm').textContent = fmt(left);
+    document.getElementById('bar').classList.toggle('low', left < 60000);
+    if (left <= 0) finish();
+  };
+  tick(); timerId = setInterval(tick, 1000);
+}
+
+async function showResult(ref, exam, rid, d) {
+  const pct = Math.round(d.score / d.total * 100);
+  let html = `<h1>${esc(exam.title)}</h1><div class="card"><p>${esc(d.name)}</p>
+   <div class="big">${d.score} / ${d.total}</div><p class="muted">${pct}%</p></div>`;
+  if (exam.showReview !== false) {
+    const wrong = exam.questions.map((q, i) => ({ q, a: (d.answers || {})[i] })).filter(x => x.a !== x.q.correct);
+    if (wrong.length) html += '<h2>مراجعة الأسئلة اللي غلطت فيها</h2>' + wrong.map(x => `<div class="card q"><b>${esc(x.q.q)}</b>
+      <div class="err">${x.a === undefined ? 'ماجاوبتش على السؤال ده' : 'إجابتك: ' + esc(x.q.options[x.a])}</div>
+      <div style="color:var(--ok);font-weight:700">الإجابة الصح: ${esc(x.q.options[x.q.correct])}</div>
+      ${x.q.exp ? '<div class="muted">' + esc(x.q.exp) + '</div>' : ''}</div>`).join('');
+    else html += '<p style="color:var(--ok);font-weight:700">جاوبت كل الأسئلة صح، ممتاز!</p>';
+  }
+  if (exam.showBoard) {
+    const rs = await boardData(ref);
+    html += `<h2>الترتيب</h2>` + boardTable(rs, rid);
+  }
+  $app.innerHTML = html;
+}
+
+async function boardData(ref) {
+  const s = await ref.collection('results').get();
+  return s.docs.map(x => ({ id: x.id, ...x.data() })).filter(x => x.status === 'done')
+    .sort((a, b) => b.score - a.score || (a.finishedAt - a.startedAt) - (b.finishedAt - b.startedAt));
+}
+function boardTable(rs, me, adm) {
+  return `<table><tr><th>#</th><th>الاسم</th><th>الدرجة</th><th>الوقت</th>${adm ? '<th>خرج من الصفحة</th>' : ''}</tr>` + rs.map((r, i) =>
+    `<tr class="${r.id === me ? 'me' : ''}"><td>${i + 1}</td><td>${esc(r.name)}</td><td>${r.score}/${r.total}</td><td>${fmt(r.finishedAt - r.startedAt)}</td>${adm ? '<td>' + (r.leaves || 0) + ' مرة</td>' : ''}</tr>`).join('') + `</table>`;
+}
+
+// ---------- teacher ----------
+function login() {
+  $app.innerHTML = `<h1>دخول المدرس</h1><div class="card"><label>الإيميل</label><input id="em" type="email" dir="ltr">
+   <label>الباسورد</label><input id="pw" type="password" dir="ltr"><button id="li">دخول</button><p id="e" class="err"></p></div>`;
+  document.getElementById('li').onclick = () => auth.signInWithEmailAndPassword(em.value, pw.value).catch(() => e.textContent = 'بيانات الدخول غلط.');
+}
+
+async function dashboard() {
+  parsedQs = [];
+  const link = id => SITE_URL + '?exam=' + id;
+  const snap = await db.collection('exams').orderBy('createdAt', 'desc').get();
+  const exams = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  $app.innerHTML = `<div class="row"><h1 style="flex:1">لوحة المدرس</h1><button class="alt" id="out">خروج</button></div>
+  <div class="card"><b>لينك واحد للكل</b><p class="muted">ابعته مرة واحدة (جروب الواتساب مثلًا). الطلاب يفتحوه ويلاقوا كل الامتحانات المفتوحة ويختاروا منها:</p>
+   <input readonly dir="ltr" value="${SITE_URL}" onclick="this.select()"></div>
+  <div class="card"><h2 style="margin-top:0">امتحان جديد</h2>
+   <label>عنوان الامتحان</label><input id="ti">
+   <label>المدة بالدقايق</label><input id="mn" type="number" value="30" min="1">
+   <label>الصق الأسئلة هنا بأي شكل. المنصة بتتعرف لوحدها على الاختيارات (أ ب ج د) والإجابة الصحيحة والشرح، وبتعرضلك معاينة تراجعها قبل النشر.</label>
+   <textarea id="qt" placeholder="ايه ناتج 2+2؟&#10;3&#10;*4&#10;5&#10;&#10;أي لغة تستخدم للويب؟&#10;*JavaScript&#10;COBOL"></textarea>
+   <label class="opt"><input type="checkbox" id="sb" checked><span>اظهر الترتيب للطلاب بعد التسليم</span></label>
+   <label class="opt"><input type="checkbox" id="sr" checked><span>اظهر للطالب الإجابة الصح والشرح للأسئلة اللي غلط فيها</span></label>
+   <div id="sk"></div><div id="pv"></div>
+   <div class="row"><button id="mk">انشر الامتحان</button><span id="pc" class="muted"></span></div><p id="e" class="err"></p></div>
+  <h2>امتحاناتك</h2>` + (exams.map(x => `<div class="card"><b>${esc(x.title)}</b> ${x.open === false ? '<span class="err">(مغلق)</span>' : ''} <span class="muted">${x.questions.length} سؤال · ${x.minutes} د</span>
+   <input readonly dir="ltr" value="${link(x.id)}" onclick="this.select()">
+   <div class="row"><button class="alt" data-r="${x.id}">النتائج</button><button class="alt" data-t="${x.id}" data-o="${x.open === false ? 0 : 1}">${x.open === false ? 'فتح الامتحان' : 'إغلاق الامتحان'}</button><button class="alt" data-d="${x.id}">حذف</button></div></div>`).join('') || '<p class="muted">لسه مفيش امتحانات.</p>') + '<div id="res"></div>';
+  document.getElementById('out').onclick = () => auth.signOut();
+  const qt = document.getElementById('qt');
+  const pvEl = document.getElementById('pv'), skEl = document.getElementById('sk');
+  let sk0 = [];
+  const note = skipped => {
+    if (skipped) sk0 = skipped;
+    const n = parsedQs.filter(q => q.correct < 0).length;
+    skEl.innerHTML = (n ? '<p class="err">' + n + ' سؤال من غير إجابة صحيحة. حددها من المعاينة (معلّمة بالأحمر).</p>' : '') +
+      (sk0.length ? '<p class="err">اتجاهلت:</p><ul class="err">' + sk0.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '');
+    parsedQs.forEach((q, i) => { const c = document.getElementById('pq' + i); if (c) c.style.borderRightColor = q.correct < 0 ? 'var(--bad)' : 'var(--ok)'; });
+  };
+  const draw = skipped => {
+    document.getElementById('pc').textContent = parsedQs.length ? 'اتقرا ' + parsedQs.length + ' سؤال' : '';
+    pvEl.innerHTML = parsedQs.length ? '<details open><summary>معاينة الأسئلة. لو الإجابة الصح مش معلّمة اضغط عليها بنفسك</summary>' + parsedQs.map((q, i) =>
+      '<div class="card q" id="pq' + i + '"><b>' + (i + 1) + '. ' + esc(q.q) + '</b>' + q.options.map((o, j) =>
+        '<label class="opt"><input type="radio" name="pk' + i + '" data-i="' + i + '" data-j="' + j + '"' + (j === q.correct ? ' checked' : '') + '><span>' + esc(o) + '</span></label>').join('') +
+      (q.exp ? '<div class="muted">شرح: ' + esc(q.exp) + '</div>' : '') + '</div>').join('') + '</details>' : '';
+    note(skipped);
+  };
+  pvEl.onchange = ev => { parsedQs[+ev.target.dataset.i].correct = +ev.target.dataset.j; note(); };
+  qt.oninput = () => { const r = parseQuestions(qt.value); parsedQs = r.qs; draw(r.skipped); };
+  document.getElementById('mk').onclick = async () => {
+    const questions = parsedQs, title = ti.value.trim();
+    if (!title || !questions.length) { e.textContent = 'اكتب العنوان وسؤال واحد على الأقل (مع علامة * على الإجابة الصح).'; return; }
+    if (questions.some(q => q.correct < 0)) { e.textContent = 'في أسئلة لسه من غير إجابة صحيحة. علّمها من المعاينة.'; return; }
+    await db.collection('exams').add({ title, minutes: +mn.value || 30, questions, showBoard: sb.checked, showReview: sr.checked, createdAt: Date.now() });
+    dashboard();
+  };
+  $app.querySelectorAll('[data-r]').forEach(b => b.onclick = async () => {
+    const id = b.dataset.r, ref = db.collection('exams').doc(id), rs = await boardData(ref);
+    const prog = (await ref.collection('results').get()).size - rs.length;
+    document.getElementById('res').innerHTML = `<h2>نتائج الامتحان</h2><p class="muted">سلّم ${rs.length} · لسه بيحلوا ${prog}</p>${boardTable(rs, '', true)}<br><button id="csv">تحميل CSV</button>`;
+    document.getElementById('csv').onclick = () => {
+      const c = '\uFEFF#,الاسم,الدرجة,من,الوقت,الخروج من الصفحة\n' + rs.map((r, i) => [i + 1, '"' + r.name.replace(/"/g, '""') + '"', r.score, r.total, fmt(r.finishedAt - r.startedAt), r.leaves || 0].join(',')).join('\n');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c], { type: 'text/csv' })); a.download = 'results.csv'; a.click();
+    };
+    document.getElementById('res').scrollIntoView();
+  });
+  $app.querySelectorAll('[data-t]').forEach(b => b.onclick = async () => {
+    await db.collection('exams').doc(b.dataset.t).update({ open: b.dataset.o === '0' }); dashboard();
+  });
+  $app.querySelectorAll('[data-d]').forEach(b => b.onclick = async () => {
+    if (!confirm('حذف الامتحان؟ النتائج هتفضل في قاعدة البيانات لكن مش هتظهر.')) return;
+    await db.collection('exams').doc(b.dataset.d).delete(); dashboard();
+  });
+}
+
+// ---------- boot ----------
+if (!firebaseConfig.projectId) setup();
+else {
+  firebase.initializeApp(firebaseConfig); db = firebase.firestore(); auth = firebase.auth();
+  if (params.has('exam')) student(params.get('exam')).catch(e => $app.innerHTML = '<p class="err">حصل خطأ: ' + esc(e.message) + '</p>');
+  else if (params.has('admin')) auth.onAuthStateChanged(u => u ? dashboard() : login());
+  else home().catch(e => $app.innerHTML = '<p class="err">حصل خطأ: ' + esc(e.message) + '</p>');
+}
+</script>
+</body>
+</html>
