@@ -89,6 +89,8 @@ const firebaseConfig = {
 };
 // لينك موقعك على Netlify (بيتستخدم في اللينكات اللي بتتبعت للطلاب)
 const SITE_URL = 'https://velvety-sprinkles-75fa39.netlify.app/';
+// كلمة دخول المدرس في اللينك: SITE_URL?الكلمة. غيّرها لأي كلمة (حروف إنجليزي وأرقام وشرطة) وانت بس اللي تعرفها
+const ADMIN_KEY = 'cs-teacher-9f3k';
 // ===============================================
 
 const $app = document.getElementById('app');
@@ -247,32 +249,41 @@ async function student(id) {
   const roster = exam.roster || [], hasCodes = roster.some(r => r.c);
   $app.innerHTML = WELCOME + `<h1>${esc(exam.title)}</h1>
    <div class="card"><p>${exam.questions.length} سؤال · ${exam.minutes} دقيقة</p>
-   ${roster.length ? '<label>اختار اسمك من القايمة</label><select id="nm"><option value="">— اختار —</option>' + roster.map((r, i) => '<option value="' + i + '">' + esc(r.n) + '</option>').join('') + '</select>' + (hasCodes ? '<label>الكود بتاعك</label><input id="cd" inputmode="numeric" autocomplete="off">' : '') : '<label>اسمك بالكامل</label><input id="nm" autocomplete="name">'}
-   <p class="muted">العداد بيبدأ أول ما تضغط ابدأ، ولو عملت ريفرش هتكمل من مكانك. خروجك من صفحة الامتحان بيتسجل للمدرس.</p>
+   ${roster.length ? '<label>اختار اسمك من القايمة</label><select id="nm"><option value="">— اختار —</option>' + roster.map((r, i) => '<option value="' + i + '">' + esc(r.n) + '</option>').join('') + '</select>' + '' : '<label>اسمك بالكامل</label><input id="nm" autocomplete="name">'}
+   <label>اعمل كود لنفسك (3 حروف أو أرقام على الأقل). افتكره عشان لو دخلت تاني.</label><input id="cd" autocomplete="off" maxlength="20">
+   <p class="muted">العداد بيبدأ أول ما تضغط ابدأ، ولو عملت ريفرش هتكمل من مكانك. خروجك من صفحة الامتحان بيتسجل للمدرس. الامتحان بيتحل مرة واحدة بس لكل اسم.</p>
    <button id="go">ابدأ الامتحان</button><p id="e" class="err"></p></div>`;
   document.getElementById('go').onclick = async () => {
     const v = document.getElementById('nm').value.trim(), eb = document.getElementById('e');
-    let name, id = null;
+    const code = document.getElementById('cd').value.trim();
+    let name, id;
     if (roster.length) {
       if (v === '') { eb.textContent = 'اختار اسمك من القايمة.'; return; }
-      const r = roster[+v]; name = r.n; id = 'r' + v;
-      if (r.c && document.getElementById('cd').value.trim() !== String(r.c)) { eb.textContent = 'الكود غلط.'; return; }
+      name = roster[+v].n; id = 'r' + v;
     } else { name = v; if (name.length < 3) { eb.textContent = 'اكتب اسمك بالكامل.'; return; } }
-    const data = { name, status: 'in_progress', startedAt: Date.now(), order: shuffle(exam.questions.length), answers: {}, leaves: 0,
+    if (code.length < 3) { eb.textContent = 'اعمل كود من 3 حروف أو أرقام على الأقل.'; return; }
+    if (!id) {
+      const hid = x => { let h = 5381; for (const ch of x) h = ((h * 33) ^ ch.codePointAt(0)) >>> 0; return h.toString(36); };
+      const k = name.replace(/\s+/g, ' ').trim().toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+      id = 'u_' + hid(k) + hid([...k].reverse().join(''));
+    }
+    const data = { name, code, status: 'in_progress', startedAt: Date.now(), order: shuffle(exam.questions.length), answers: {}, leaves: 0,
       oo: Object.fromEntries(exam.questions.map((q, i) => [i, shuffle(q.options.length)])) };
-    let rid, rd = data;
-    if (id) {
-      const old = await ref.collection('results').doc(id).get();
-      if (old.exists) { rid = id; rd = old.data(); } else { await ref.collection('results').doc(id).set(data); rid = id; }
-    } else { rid = (await ref.collection('results').add(data)).id; }
-    localStorage.setItem(key, JSON.stringify({ rid }));
-    return rd.status === 'done' ? showResult(ref, exam, rid, rd) : runExam(ref, exam, rid, rd, key);
+    const dref = ref.collection('results').doc(id), old = await dref.get();
+    let rd = data;
+    if (old.exists) {
+      rd = old.data();
+      if (rd.code && rd.code !== code) { eb.textContent = 'الاسم ده دخل الامتحان قبل كده. لو ده انت اكتب نفس الكود اللي عملته أول مرة، ولو لأ اكتب اسمك الكامل (3 أو 4 أسماء).'; return; }
+    } else await dref.set(data);
+    localStorage.setItem(key, JSON.stringify({ rid: id }));
+    return rd.status === 'done' ? showResult(ref, exam, id, rd) : runExam(ref, exam, id, rd, key);
   };
 }
 
 function runExam(ref, exam, rid, data, key) {
   const end = data.startedAt + exam.minutes * 60000;
-  const answers = data.answers || {};
+  const answers = data.answers || {}, lk = 'ans_' + rid;
+  try { Object.assign(answers, JSON.parse(localStorage.getItem(lk) || '{}')); } catch (e) {}
   let finished = false, t, leaves = data.leaves || 0;
   const onHide = () => { if (document.hidden && !finished) { leaves++; ref.collection('results').doc(rid).update({ leaves, answers }).catch(() => {}); } };
   document.addEventListener('visibilitychange', onHide);
@@ -288,6 +299,7 @@ function runExam(ref, exam, rid, data, key) {
       `<label class="opt"><input type="radio" name="q${qi}" value="${oi}" ${answers[qi] === oi ? 'checked' : ''}><span>${esc(q.options[oi])}</span></label>`).join('');
     d.onchange = e => {
       answers[qi] = +e.target.value; d.classList.add('done'); prog();
+      try { localStorage.setItem(lk, JSON.stringify(answers)); } catch (e) {}
       clearTimeout(t);
       document.getElementById('sv').textContent = '';
       t = setTimeout(() => ref.collection('results').doc(rid).update({ answers }).then(() => document.getElementById('sv').textContent = 'تم حفظ إجاباتك'), 20000);
@@ -299,6 +311,7 @@ function runExam(ref, exam, rid, data, key) {
     let score = 0; exam.questions.forEach((q, i) => { if (answers[i] === q.correct) score++; });
     const upd = { status: 'done', answers, score, total: exam.questions.length, finishedAt: Date.now() };
     await ref.collection('results').doc(rid).update(upd);
+    try { localStorage.removeItem(lk); } catch (e) {}
     showResult(ref, exam, rid, { ...data, ...upd });
   };
   document.getElementById('fin').onclick = () => { if (confirm('تأكيد تسليم الامتحان؟')) finish(); };
@@ -333,7 +346,7 @@ async function showResult(ref, exam, rid, d) {
   }
   if (exam.showBoard) {
     const rs = await boardData(ref, true);
-    html += `<h2>أعلى 10 طلاب</h2>` + boardTable(rs, rid);
+    html += `<h2>أعلى 10 طلاب</h2>` + boardTable(rs, rid, false, exam.boardMode);
     if (!rs.some(r => r.id === rid)) html += `<p class="muted">درجتك ${d.score}/${d.total}، وإنت خارج أول 10 المرة دي. كمّل، التقدم بيبان.</p>`;
   }
   $app.innerHTML = html;
@@ -350,9 +363,10 @@ async function boardData(ref, top) {
     .sort((a, b) => b.score - a.score || (a.finishedAt - a.startedAt) - (b.finishedAt - b.startedAt));
   return top ? rs.slice(0, 10) : rs;
 }
-function boardTable(rs, me, adm) {
-  return `<table><tr><th>#</th><th>الاسم</th><th>الدرجة</th><th>الوقت</th>${adm ? '<th>خرج من الصفحة</th>' : ''}</tr>` + rs.map((r, i) =>
-    `<tr class="${r.id === me ? 'me' : ''}" style="--i:${i}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td><td>${esc(r.name)}</td><td>${r.score}/${r.total}</td><td>${fmt(r.finishedAt - r.startedAt)}</td>${adm ? '<td>' + (r.leaves || 0) + ' مرة</td>' : ''}</tr>`).join('') + `</table>`;
+function boardTable(rs, me, adm, mode) {
+  const cod = mode === 'codes';
+  return `<table><tr><th>#</th><th>${cod ? 'الكود' : 'الاسم'}</th>${adm ? '<th>الكود</th>' : ''}<th>الدرجة</th><th>الوقت</th>${adm ? '<th>خرج من الصفحة</th>' : ''}</tr>` + rs.map((r, i) =>
+    `<tr class="${r.id === me ? 'me' : ''}" style="--i:${i}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td><td>${esc(cod ? (r.code || '—') : r.name)}</td>${adm ? '<td>' + esc(r.code || '') + '</td>' : ''}<td>${r.score}/${r.total}</td><td>${fmt(r.finishedAt - r.startedAt)}</td>${adm ? '<td>' + (r.leaves || 0) + ' مرة</td>' : ''}</tr>`).join('') + `</table>`;
 }
 
 // ---------- teacher ----------
@@ -375,8 +389,8 @@ async function dashboard() {
    <label>المدة بالدقايق</label><input id="mn" type="number" value="30" min="1">
    <label>الصق الأسئلة هنا بأي شكل. المنصة بتتعرف لوحدها على الاختيارات (أ ب ج د) والإجابة الصحيحة والشرح، وبتعرضلك معاينة تراجعها قبل النشر.</label>
    <textarea id="qt" placeholder="ايه ناتج 2+2؟&#10;3&#10;*4&#10;5&#10;&#10;أي لغة تستخدم للويب؟&#10;*JavaScript&#10;COBOL"></textarea>
-   <label>قايمة الطلاب المسموح لهم (اختياري). اسم في كل سطر، ولو عايز كود لكل طالب اكتب: الاسم | الكود. لو سبتها فاضية أي حد يدخل بأي اسم.</label><textarea id="ro" style="min-height:110px"></textarea>
-   <label class="opt"><input type="checkbox" id="sb" checked><span>اظهر الترتيب للطلاب بعد التسليم</span></label>
+   <label>قايمة الطلاب المسموح لهم (اختياري). اسم في كل سطر. الطالب يختار اسمه من القايمة ويعمل كود لنفسه. لو سبتها فاضية أي حد يكتب أي اسم.</label><textarea id="ro" style="min-height:110px"></textarea>
+   <label>الترتيب بعد التسليم</label><select id="bm"><option value="names">يظهر أول 10 بالأسماء</option><option value="codes">يظهر أول 10 بالأكواد بس (من غير أسماء)</option><option value="none">مفيش ترتيب للطلاب</option></select>
    <label class="opt"><input type="checkbox" id="sr" checked><span>اظهر للطالب الإجابة الصح والشرح للأسئلة اللي غلط فيها</span></label>
    <div id="sk"></div><div id="pv"></div>
    <div class="row"><button id="mk">انشر الامتحان</button><span id="pc" class="muted"></span></div><p id="e" class="err"></p></div>
@@ -408,7 +422,7 @@ async function dashboard() {
     const questions = parsedQs, title = ti.value.trim();
     if (!title || !questions.length) { e.textContent = 'اكتب العنوان وسؤال واحد على الأقل (مع علامة * على الإجابة الصح).'; return; }
     if (questions.some(q => q.correct < 0)) { e.textContent = 'في أسئلة لسه من غير إجابة صحيحة. علّمها من المعاينة.'; return; }
-    await db.collection('exams').add({ title, minutes: +mn.value || 30, questions, roster: document.getElementById('ro').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [n, c] = l.split(/\s*[|\t,،]\s*/); return { n: n.trim(), c: (c || '').trim() }; }), showBoard: sb.checked, showReview: sr.checked, createdAt: Date.now() });
+    await db.collection('exams').add({ title, minutes: +mn.value || 30, questions, roster: document.getElementById('ro').value.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [n, c] = l.split(/\s*[|\t,،]\s*/); return { n: n.trim(), c: (c || '').trim() }; }), showBoard: document.getElementById('bm').value !== 'none', boardMode: document.getElementById('bm').value, showReview: sr.checked, createdAt: Date.now() });
     dashboard();
   };
   $app.querySelectorAll('[data-r]').forEach(b => b.onclick = async () => {
@@ -418,7 +432,7 @@ async function dashboard() {
     const absentHtml = (exm.roster || []).length ? `<p class="muted">لسه ما بدأوش (${absent.length}): ${esc(absent.join('، ') || 'محدش')}</p>` : '';
     document.getElementById('res').innerHTML = `<h2>نتائج الامتحان</h2><p class="muted">سلّم ${rs.length} · لسه بيحلوا ${prog}</p>${absentHtml}${boardTable(rs, '', true)}<br><button id="csv">تحميل CSV</button>`;
     document.getElementById('csv').onclick = () => {
-      const c = '\uFEFF#,الاسم,الدرجة,من,الوقت,الخروج من الصفحة\n' + rs.map((r, i) => [i + 1, '"' + r.name.replace(/"/g, '""') + '"', r.score, r.total, fmt(r.finishedAt - r.startedAt), r.leaves || 0].join(',')).join('\n');
+      const c = '\uFEFF#,الاسم,الكود,الدرجة,من,الوقت,الخروج من الصفحة\n' + rs.map((r, i) => [i + 1, '"' + r.name.replace(/"/g, '""') + '"', '"' + (r.code || '').replace(/"/g, '""') + '"', r.score, r.total, fmt(r.finishedAt - r.startedAt), r.leaves || 0].join(',')).join('\n');
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([c], { type: 'text/csv' })); a.download = 'results.csv'; a.click();
     };
     document.getElementById('res').scrollIntoView();
@@ -438,7 +452,7 @@ else if (typeof firebase === 'undefined') $app.innerHTML = WELCOME + '<p class="
 else {
   firebase.initializeApp(firebaseConfig); db = firebase.firestore(); db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); auth = firebase.auth();
   if (params.has('exam')) student(params.get('exam')).catch(e => $app.innerHTML = WELCOME + '<p class="err">تعذر تحميل الامتحان: ' + esc(e.message) + '</p><button onclick="location.reload()">حاول تاني</button>');
-  else if (params.has('admin')) auth.onAuthStateChanged(u => u ? dashboard() : login());
+  else if (params.has(ADMIN_KEY)) auth.onAuthStateChanged(u => u ? dashboard() : login());
   else home().catch(e => $app.innerHTML = '<p class="err">حصل خطأ: ' + esc(e.message) + '</p>');
 }
 </script>
