@@ -70,6 +70,9 @@ a.ex:hover{transform:translateY(-5px);border-color:var(--teal);box-shadow:0 10px
 .hero h2.t b{color:var(--teal)}
 .hero svg{width:min(440px,100%);height:auto;overflow:visible}
 .rules{background:rgba(255,200,61,.12);border:1px solid rgba(255,200,61,.45);border-radius:14px;padding:10px 14px;margin:8px 0 12px;font-size:.92rem}.rules ul{margin:6px 0 0;padding-right:20px}.rules li{margin:2px 0}
+.seat{text-align:center}.seat .big{font-size:5rem;letter-spacing:8px;direction:ltr}
+.bars{display:flex;gap:10px;align-items:flex-end;height:160px;margin:14px 0}.bars div{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;font-size:.8rem;font-weight:700}.bars i{display:block;width:100%;max-width:46px;height:var(--h);background:linear-gradient(var(--teal),var(--pink));border-radius:8px 8px 0 0;transform-origin:bottom;animation:grow .7s calc(var(--i)*.1s) both}
+@keyframes grow{from{transform:scaleY(0)}}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0}
 .chips span{padding:6px 14px;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid var(--line);font-weight:600;font-size:.88rem;animation:up .6s both}
 .chips span:nth-child(2){animation-delay:.1s}.chips span:nth-child(3){animation-delay:.2s}.chips span:nth-child(4){animation-delay:.3s}
@@ -142,6 +145,10 @@ service cloud.firestore {
         allow update: if resource.data.status == 'in_progress';
         allow delete: if request.auth != null;
       }
+    }
+    match /students/{s} {
+      allow read: if true;
+      allow create: if true;
     }
   }
 }`;
@@ -285,7 +292,8 @@ async function home() {
   const ex = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(x => x.open !== false);
   $app.innerHTML = WELCOME + (ex.length ? '<h2>الامتحانات المتاحة</h2>' + ex.map(x =>
     `<a class="card ex" href="?exam=${x.id}"><b>${esc(x.title)}</b><span class="muted">${x.questions.length} سؤال · ${x.minutes} دقيقة</span></a>`).join('')
-    : '<p class="muted" style="text-align:center">مفيش امتحانات متاحة دلوقتي.</p>');
+        : '<p class="muted" style="text-align:center">مفيش امتحانات متاحة دلوقتي.</p>') + LOOKUP;
+  wireLookup();
 }
 async function student(id) {
   const ref = db.collection('exams').doc(id);
@@ -312,13 +320,24 @@ async function student(id) {
     <li>العداد بيبدأ أول ما تضغط «ابدأ الامتحان».</li>
     <li>لو عملت ريفرش هتكمل من مكانك، والوقت بيفضل شغال.</li>
     <li>خروجك من صفحة الامتحان بيتسجل للمدرس.</li>
+    <li>أول مرة هنديك <b>رقم جلوس من 4 أرقام</b>، احتفظ بيه عشان تشوف درجاتك القديمة وتتابع مستواك.</li>
     <li>الامتحان بيتحل مرة واحدة بس، ولو دخلت تاني بنفس الاسم هتلاقي نتيجتك ومراجعتك.</li></ul></div>
    ${roster.length ? '<label>اختار اسمك من القايمة</label><select id="nm"><option value="">— اختار —</option>' + roster.map((r, i) => '<option value="' + i + '">' + esc(r.n) + '</option>').join('') + '</select>' : '<label>اسمك بالكامل</label><input id="nm" autocomplete="name">'}
+   <label>رقم الجلوس (لو دخلت قبل كده)</label><input id="sn" inputmode="numeric" maxlength="4" dir="ltr" placeholder="مثال: 4827" value="${esc(localStorage.getItem('cs_seat') || '')}"><p class="muted" style="margin:0 0 10px">أول مرة؟ سيبه فاضي وهنديك رقم خاص بيك. <a href="./" style="color:var(--teal)">درجاتي السابقة</a></p>
    <button id="go">ابدأ الامتحان</button><p id="e" class="err"></p></div>`;
   document.getElementById('go').onclick = async () => {
-    const v = document.getElementById('nm').value.trim(), eb = document.getElementById('e');
-    let name, id;
-    if (roster.length) {
+    const v = document.getElementById('nm').value.trim(), sv = document.getElementById('sn').value.trim(), eb = document.getElementById('e');
+    const norm = x => x.replace(/\s+/g, ' ').trim().toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+    let name, id, seat = '';
+    if (sv) {
+      if (!/^\d{4}$/.test(sv)) { eb.textContent = 'رقم الجلوس لازم يكون 4 أرقام.'; return; }
+      try { const sd = await db.collection('students').doc(sv).get(); if (!sd.exists) { eb.textContent = 'رقم الجلوس ده مش موجود.'; return; } name = sd.data().name; }
+      catch (e) { eb.textContent = 'تعذر التحقق من الرقم: ' + e.message; return; }
+      const given = roster.length ? (v === '' ? '' : roster[+v].n) : v;
+      if (given && norm(given) !== norm(name)) { eb.textContent = 'الاسم مش مطابق لرقم الجلوس ده. لو الرقم مش بتاعك امسحه.'; return; }
+      seat = sv;
+      if (roster.length) { const ri = roster.findIndex(r => norm(r.n) === norm(name)); if (ri >= 0) id = 'r' + ri; }
+    } else if (roster.length) {
       if (v === '') { eb.textContent = 'اختار اسمك من القايمة.'; return; }
       name = roster[+v].n; id = 'r' + v;
     } else { name = v; if (name.length < 3) { eb.textContent = 'اكتب اسمك بالكامل.'; return; } }
@@ -334,11 +353,58 @@ async function student(id) {
     let rd = data;
     try {
       const old = await dref.get();
-      if (old.exists) rd = old.data(); else await dref.set(data);
-    } catch (e) { gb.disabled = false; gb.textContent = 'ابدأ الامتحان'; eb.textContent = 'تعذر بدء الامتحان: ' + e.message; return; }
+      if (old.exists) { rd = old.data(); seat = seat || rd.seat || ''; }
+      if (!seat) { seat = await newSeat(name); await showSeat(seat, name); data.startedAt = Date.now(); }
+      localStorage.setItem('cs_seat', seat);
+      if (old.exists) { if (!rd.seat) { rd.seat = seat; dref.update({ seat }).catch(() => {}); } }
+      else { data.seat = seat; await dref.set(data); }
+    } catch (e) { gb.disabled = false; gb.textContent = 'ابدأ الامتحان'; const m = 'تعذر بدء الامتحان: ' + e.message; if (eb.isConnected) eb.textContent = m; else alert(m + ' — اعمل ريفرش وجرّب تاني.'); return; }
     localStorage.setItem(key, JSON.stringify({ rid: id }));
     return rd.status === 'done' ? showResult(ref, exam, id, rd) : runExam(ref, exam, id, rd, key);
   };
+}
+
+async function newSeat(name) {
+  for (let i = 0; i < 40; i++) {
+    const n = String(1000 + Math.floor(Math.random() * 9000)), r = db.collection('students').doc(n);
+    try { await db.runTransaction(async t => { if ((await t.get(r)).exists) throw 'dup'; t.set(r, { name, createdAt: Date.now() }); }); return n; }
+    catch (e) { if (e !== 'dup') throw e; }
+  }
+  throw new Error('مفيش أرقام جلوس متاحة، كلم المدرس.');
+}
+function showSeat(seat, name) {
+  return new Promise(res => {
+    $app.innerHTML = WELCOME + `<div class="card seat"><p class="muted">أهلًا يا ${esc(name)} 👋</p><h2 style="margin:0">رقم جلوسك</h2><div class="big">${seat}</div>
+     <p><b>📌 خلّي الرقم ده معاك.</b> صوّر الشاشة أو اكتبه في مكان أمان.</p>
+     <p class="muted">هو مفتاحك على المنصة: كل ما تدخل بيه هتلاقي درجاتك في كل الامتحانات اللي فاتت، وهنوريك مستواك بيتحسن ولا محتاج شغل أكتر. لو ضاع منك كلم المدرس.</p>
+     <p class="muted">العداد لسه ما بدأش. لما تحفظ الرقم اضغط الزرار.</p><button id="sgo">حفظت الرقم، ابدأ الامتحان</button></div>`;
+    document.getElementById('sgo').onclick = res;
+  });
+}
+const LOOKUP = `<div class="card"><b>📊 درجاتي السابقة</b><p class="muted">اكتب رقم جلوسك (4 أرقام) وشوف مستواك بيتحسن ولا لأ.</p><input id="mq" inputmode="numeric" maxlength="4" dir="ltr" placeholder="رقم الجلوس"><button id="mb">اعرض درجاتي</button><p id="mer" class="err"></p></div>`;
+function wireLookup() {
+  const mq = document.getElementById('mq'); if (!mq) return;
+  mq.value = localStorage.getItem('cs_seat') || '';
+  document.getElementById('mb').onclick = () => { const q = mq.value.trim(); if (!/^\d{4}$/.test(q)) { document.getElementById('mer').textContent = 'اكتب 4 أرقام.'; return; } showMe(q); };
+}
+async function showMe(seat) {
+  $app.innerHTML = WELCOME + '<p class="muted" style="text-align:center">جاري تحميل درجاتك...</p>';
+  try {
+    const sd = await db.collection('students').doc(seat).get();
+    if (!sd.exists) { await home(); document.getElementById('mer').textContent = 'رقم الجلوس ده مش موجود.'; return; }
+    localStorage.setItem('cs_seat', seat);
+    const ex = await db.collection('exams').get();
+    const rows = (await Promise.all(ex.docs.map(async d => (await d.ref.collection('results').where('seat', '==', seat).get()).docs.map(r => ({ t: d.data().title, ...r.data() })))))
+      .flat().filter(r => r.status === 'done').sort((a, b) => a.finishedAt - b.finishedAt);
+    const p = rows.map(r => Math.round(r.score / r.total * 100)), n = p.length;
+    let msg = 'لسه ما خلصتش أي امتحان. أول امتحان هيبدأ رحلتك 🚀';
+    if (n === 1) msg = 'ده أول امتحان ليك. من الامتحان الجاي هنقارن مستواك 👌';
+    if (n > 1) { const d = p[n - 1] - p[n - 2]; msg = d > 0 ? `📈 بتتحسن! آخر امتحان أعلى من اللي قبله بـ ${d}%. كمّل.` : d < 0 ? `📉 آخر امتحان نزل ${-d}% عن اللي قبله. راجع أخطاءك وهترجع أقوى.` : '➖ مستواك ثابت عن آخر امتحان. شوية تركيز زيادة وهتطلع.'; }
+    $app.innerHTML = WELCOME + `<h1>أهلًا ${esc(sd.data().name)}</h1><div class="card"><p class="muted">رقم الجلوس: <b>${seat}</b> · امتحانات خلصتها: ${n}</p><p style="font-size:1.15rem;font-weight:700">${msg}</p>
+      ${n ? '<div class="bars">' + p.map((v, i) => `<div style="--h:${v}%;--i:${i}"><span>${v}%</span><i></i></div>`).join('') + '</div>' : ''}</div>`
+      + (n ? '<table><tr><th>الامتحان</th><th>الدرجة</th><th>النسبة</th><th>الوقت</th></tr>' + rows.map((r, i) => `<tr style="--i:${i}"><td>${esc(r.t)}</td><td>${r.score}/${r.total}</td><td>${p[i]}%</td><td>${fmt(r.finishedAt - r.startedAt)}</td></tr>`).join('') + '</table>' : '')
+      + '<br><a href="./"><button class="alt">رجوع للرئيسية</button></a>';
+  } catch (e) { $app.innerHTML = WELCOME + '<p class="err" style="text-align:center">تعذر تحميل درجاتك: ' + esc(e.message) + '</p><button onclick="location.reload()">حاول تاني</button>'; }
 }
 
 function runExam(ref, exam, rid, data, key) {
@@ -432,8 +498,8 @@ async function boardData(ref, top) {
   return top ? rs.slice(0, 10) : rs;
 }
 function boardTable(rs, me, adm) {
-  return `<table><tr><th>#</th><th>الاسم</th><th>الدرجة</th><th>الوقت</th>${adm ? '<th>خرج من الصفحة</th>' : ''}</tr>` + rs.map((r, i) =>
-    `<tr class="${r.id === me ? 'me' : ''}" style="--i:${i}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td><td>${esc(r.name)}</td><td>${r.score}/${r.total}</td><td>${fmt(r.finishedAt - r.startedAt)}</td>${adm ? '<td>' + (r.leaves || 0) + ' مرة</td>' : ''}</tr>`).join('') + `</table>`;
+  return `<table><tr><th>#</th><th>الاسم</th>${adm ? '<th>الرقم</th>' : ''}<th>الدرجة</th><th>الوقت</th>${adm ? '<th>خرج من الصفحة</th>' : ''}</tr>` + rs.map((r, i) =>
+    `<tr class="${r.id === me ? 'me' : ''}" style="--i:${i}"><td>${['🥇', '🥈', '🥉'][i] || i + 1}</td><td>${esc(r.name)}</td>${adm ? '<td>' + (r.seat || '—') + '</td>' : ''}<td>${r.score}/${r.total}</td><td>${fmt(r.finishedAt - r.startedAt)}</td>${adm ? '<td>' + (r.leaves || 0) + ' مرة</td>' : ''}</tr>`).join('') + `</table>`;
 }
 
 // ---------- teacher ----------
