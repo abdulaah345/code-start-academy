@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Code Start</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#f4f8ff;--bg:#0a3a8c;--teal:#7ff2cf;--violet:#2b79ff;--pink:#14b4f2;--amber:#ffc83d;--line:rgba(255,255,255,.2);--ok:#7ff2cf;--bad:#ff7a8a;--card:rgba(255,255,255,.1)}
 *{box-sizing:border-box}
 body{margin:0;font-family:Cairo,Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;min-height:100vh;overflow-x:hidden}
 .bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:radial-gradient(circle at 15% 0%,#1263d6,transparent 55%),radial-gradient(circle at 90% 100%,#06285f,transparent 60%),linear-gradient(160deg,#0d4fb0,#082d6e)}
-.bg i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;animation:drift 14s ease-in-out infinite alternate}
+.bg i{display:none}
 .bg i:nth-child(1){width:340px;height:340px;background:#2b8cff;top:-80px;right:-60px}
 .bg i:nth-child(2){width:300px;height:300px;background:var(--teal);bottom:-80px;left:-60px;animation-delay:-5s}
 .bg i:nth-child(3){width:240px;height:240px;background:#ffc83d;top:45%;left:40%;animation-delay:-9s;opacity:.12}
@@ -19,11 +20,12 @@ body{margin:0;font-family:Cairo,Tahoma,sans-serif;background:var(--bg);color:var
 main{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:20px 16px 80px}
 h1{font-size:1.7rem;margin:.2em 0;font-weight:800;background:linear-gradient(90deg,var(--teal),#fff);-webkit-background-clip:text;background-clip:text;color:transparent}
 h2{font-size:1.2rem;margin:1.2em 0 .4em;color:var(--amber)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0;backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(3,20,60,.25);animation:up .55s both}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0;box-shadow:0 10px 30px rgba(3,20,60,.25);animation:up .55s both}
 main>*:nth-child(2){animation-delay:.08s}main>*:nth-child(3){animation-delay:.16s}main>*:nth-child(4){animation-delay:.24s}main>*:nth-child(n+5){animation-delay:.3s}
 input,textarea,select{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.08);color:var(--ink);margin:4px 0 10px;transition:border-color .2s,box-shadow .2s}
 input:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(34,211,238,.25)}
 textarea{min-height:200px;direction:rtl}
+button:disabled{opacity:.6;cursor:wait;animation:none!important}
 button{font:inherit;font-weight:700;background:linear-gradient(135deg,var(--violet),var(--pink));color:#fff;border:0;border-radius:12px;padding:11px 22px;cursor:pointer;transition:transform .2s,box-shadow .2s}
 button:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(20,180,242,.4)}
 button:active{transform:scale(.97)}
@@ -51,7 +53,7 @@ tr.me td{background:rgba(255,200,61,.22);font-weight:700}
 pre{background:#061a44;color:#e8efe9;padding:12px;border-radius:10px;overflow:auto;direction:ltr;text-align:left;font-size:.8rem}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .brand{text-align:center;padding:22px 0 8px}
-.logo{display:inline-block;font-size:2.4rem;font-weight:800;direction:ltr;padding:0 8px;background:linear-gradient(90deg,#fff,var(--teal),#fff);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 4s linear infinite;filter:drop-shadow(0 0 14px rgba(124,92,255,.7));border-bottom:5px solid var(--amber)}
+.logo{display:inline-block;font-size:2.4rem;font-weight:800;direction:ltr;padding:0 8px;background:linear-gradient(90deg,#fff,var(--teal),#fff);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;border-bottom:5px solid var(--amber)}
 .wel{font-size:1.15rem;font-weight:600;margin:12px 0 0;animation:up .8s .2s both}
 a.ex{display:flex;justify-content:space-between;gap:10px;text-decoration:none;color:inherit;transition:transform .25s,border-color .25s,box-shadow .25s}
 a.ex:hover{transform:translateY(-5px);border-color:var(--teal);box-shadow:0 10px 26px rgba(34,211,238,.25)}
@@ -325,6 +327,7 @@ async function student(id) {
       const k = name.replace(/\s+/g, ' ').trim().toLowerCase().replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
       id = 'u_' + hid(k) + hid([...k].reverse().join(''));
     }
+    const gb = document.getElementById('go'); gb.disabled = true; gb.textContent = 'جاري بدء الامتحان...';
     const data = { name, status: 'in_progress', startedAt: Date.now(), order: shuffle(exam.questions.length), answers: {}, leaves: 0,
       oo: Object.fromEntries(exam.questions.map((q, i) => [i, shuffle(q.options.length)])) };
     const dref = ref.collection('results').doc(id);
@@ -332,7 +335,7 @@ async function student(id) {
     try {
       const old = await dref.get();
       if (old.exists) rd = old.data(); else await dref.set(data);
-    } catch (e) { eb.textContent = 'تعذر بدء الامتحان: ' + e.message; return; }
+    } catch (e) { gb.disabled = false; gb.textContent = 'ابدأ الامتحان'; eb.textContent = 'تعذر بدء الامتحان: ' + e.message; return; }
     localStorage.setItem(key, JSON.stringify({ rid: id }));
     return rd.status === 'done' ? showResult(ref, exam, id, rd) : runExam(ref, exam, id, rd, key);
   };
