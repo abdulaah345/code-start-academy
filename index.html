@@ -6,39 +6,39 @@
 <title>Code Start</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#eef0ff;--bg:#0b0d2a;--teal:#22d3ee;--violet:#7c5cff;--pink:#ff5fa2;--amber:#ffc83d;--line:rgba(255,255,255,.16);--ok:#34d399;--bad:#ff6b81;--card:rgba(255,255,255,.07)}
+:root{--ink:#f4f8ff;--bg:#0a3a8c;--teal:#7ff2cf;--violet:#2b79ff;--pink:#14b4f2;--amber:#ffc83d;--line:rgba(255,255,255,.2);--ok:#7ff2cf;--bad:#ff7a8a;--card:rgba(255,255,255,.1)}
 *{box-sizing:border-box}
 body{margin:0;font-family:Cairo,Tahoma,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;min-height:100vh;overflow-x:hidden}
-.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:radial-gradient(circle at 20% 10%,#1b1f5e,transparent 55%),radial-gradient(circle at 85% 90%,#3a1459,transparent 55%)}
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:radial-gradient(circle at 15% 0%,#1263d6,transparent 55%),radial-gradient(circle at 90% 100%,#06285f,transparent 60%),linear-gradient(160deg,#0d4fb0,#082d6e)}
 .bg i{position:absolute;border-radius:50%;filter:blur(60px);opacity:.5;animation:drift 14s ease-in-out infinite alternate}
-.bg i:nth-child(1){width:340px;height:340px;background:var(--violet);top:-80px;right:-60px}
+.bg i:nth-child(1){width:340px;height:340px;background:#2b8cff;top:-80px;right:-60px}
 .bg i:nth-child(2){width:300px;height:300px;background:var(--teal);bottom:-80px;left:-60px;animation-delay:-5s}
-.bg i:nth-child(3){width:240px;height:240px;background:var(--pink);top:45%;left:40%;animation-delay:-9s;opacity:.28}
+.bg i:nth-child(3){width:240px;height:240px;background:#ffc83d;top:45%;left:40%;animation-delay:-9s;opacity:.12}
 .fl{position:fixed;inset:0;z-index:0;pointer-events:none}
 .fl span{position:absolute;font:700 1.7rem monospace;color:rgba(255,255,255,.13);direction:ltr;animation:float 9s ease-in-out infinite}
 main{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:20px 16px 80px}
-h1{font-size:1.7rem;margin:.2em 0;font-weight:800;background:linear-gradient(90deg,var(--teal),var(--violet),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+h1{font-size:1.7rem;margin:.2em 0;font-weight:800;background:linear-gradient(90deg,var(--teal),#fff);-webkit-background-clip:text;background-clip:text;color:transparent}
 h2{font-size:1.2rem;margin:1.2em 0 .4em;color:var(--amber)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0;backdrop-filter:blur(10px);animation:up .55s both}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin:14px 0;backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(3,20,60,.25);animation:up .55s both}
 main>*:nth-child(2){animation-delay:.08s}main>*:nth-child(3){animation-delay:.16s}main>*:nth-child(4){animation-delay:.24s}main>*:nth-child(n+5){animation-delay:.3s}
 input,textarea,select{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.08);color:var(--ink);margin:4px 0 10px;transition:border-color .2s,box-shadow .2s}
 input:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(34,211,238,.25)}
 textarea{min-height:200px;direction:rtl}
 button{font:inherit;font-weight:700;background:linear-gradient(135deg,var(--violet),var(--pink));color:#fff;border:0;border-radius:12px;padding:11px 22px;cursor:pointer;transition:transform .2s,box-shadow .2s}
-button:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(255,95,162,.4)}
+button:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(20,180,242,.4)}
 button:active{transform:scale(.97)}
 button.alt{background:transparent;color:var(--teal);border:1px solid var(--teal)}
 button.alt:hover{box-shadow:0 8px 22px rgba(34,211,238,.3)}
 #go{animation:pulse 2s infinite}
-.muted{color:rgba(238,240,255,.68);font-size:.9rem}
+.muted{color:rgba(244,248,255,.78);font-size:.9rem}
 .err{color:var(--bad);font-weight:600}
 .q{border-right:5px solid var(--line);transition:border-color .3s}
 .q.done{border-color:var(--teal)}
 .opt{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;border:1px solid transparent;cursor:pointer;transition:background .2s,transform .15s}
 .opt:hover{background:rgba(255,255,255,.09);transform:translateX(-3px)}
-.opt:has(input:checked){background:rgba(124,92,255,.3);border-color:var(--violet)}
+.opt:has(input:checked){background:rgba(43,121,255,.4);border-color:var(--violet)}
 .opt input{width:auto;margin:6px 0 0;accent-color:var(--pink)}
-#bar{position:sticky;top:0;background:linear-gradient(90deg,var(--violet),var(--pink));color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:700;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+#bar{position:sticky;top:0;background:linear-gradient(90deg,#0d4fb0,#14b4f2);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:700;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,.35)}
 #bar.low{background:var(--bad);animation:pulse 1s infinite}
 #prog{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.25)}
 #pf{display:block;height:100%;width:0;background:var(--amber);transition:width .4s;box-shadow:0 0 10px var(--amber)}
@@ -47,11 +47,11 @@ th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:right}
 th{background:rgba(255,255,255,.1);color:var(--teal)}
 tr{animation:slide .5s both;animation-delay:calc(var(--i,0)*70ms)}
 tr.me td{background:rgba(255,200,61,.22);font-weight:700}
-.big{font-size:4rem;font-weight:800;line-height:1.1;background:linear-gradient(90deg,var(--amber),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent;animation:pop .7s both}
-pre{background:#05061a;color:#e8efe9;padding:12px;border-radius:10px;overflow:auto;direction:ltr;text-align:left;font-size:.8rem}
+.big{font-size:4rem;font-weight:800;line-height:1.1;background:linear-gradient(90deg,var(--amber),var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent;animation:pop .7s both}
+pre{background:#061a44;color:#e8efe9;padding:12px;border-radius:10px;overflow:auto;direction:ltr;text-align:left;font-size:.8rem}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .brand{text-align:center;padding:22px 0 8px}
-.logo{display:inline-block;font-size:2.4rem;font-weight:800;direction:ltr;padding:0 8px;background:linear-gradient(90deg,var(--teal),var(--violet),var(--pink),var(--teal));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 4s linear infinite;filter:drop-shadow(0 0 14px rgba(124,92,255,.7));border-bottom:5px solid var(--amber)}
+.logo{display:inline-block;font-size:2.4rem;font-weight:800;direction:ltr;padding:0 8px;background:linear-gradient(90deg,#fff,var(--teal),#fff);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 4s linear infinite;filter:drop-shadow(0 0 14px rgba(124,92,255,.7));border-bottom:5px solid var(--amber)}
 .wel{font-size:1.15rem;font-weight:600;margin:12px 0 0;animation:up .8s .2s both}
 a.ex{display:flex;justify-content:space-between;gap:10px;text-decoration:none;color:inherit;transition:transform .25s,border-color .25s,box-shadow .25s}
 a.ex:hover{transform:translateY(-5px);border-color:var(--teal);box-shadow:0 10px 26px rgba(34,211,238,.25)}
@@ -62,11 +62,33 @@ a.ex:hover{transform:translateY(-5px);border-color:var(--teal);box-shadow:0 10px
 .rv.w{background:rgba(255,107,129,.18);color:var(--bad)}
 .nocopy{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .nocopy input,.nocopy textarea,.nocopy select{-webkit-user-select:text;user-select:text}
+
+.hero{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0 4px}
+.hero h2.t{margin:0;font-size:2rem;font-weight:800;color:#fff;line-height:1.3;text-align:center;animation:up .8s both}
+.hero h2.t b{color:var(--teal)}
+.hero svg{width:min(440px,100%);height:auto;overflow:visible}
+.rules{background:rgba(255,200,61,.12);border:1px solid rgba(255,200,61,.45);border-radius:14px;padding:10px 14px;margin:8px 0 12px;font-size:.92rem}.rules ul{margin:6px 0 0;padding-right:20px}.rules li{margin:2px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0}
+.chips span{padding:6px 14px;border-radius:99px;background:rgba(255,255,255,.12);border:1px solid var(--line);font-weight:600;font-size:.88rem;animation:up .6s both}
+.chips span:nth-child(2){animation-delay:.1s}.chips span:nth-child(3){animation-delay:.2s}.chips span:nth-child(4){animation-delay:.3s}
+.boy{animation:bob 3.2s ease-in-out infinite;transform-origin:50% 100%}
+.arm{animation:tap .5s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:0 0}
+.ln{stroke-dasharray:60;stroke-dashoffset:60;animation:type 3.6s ease-in-out infinite}
+.ln:nth-of-type(2){animation-delay:.6s}.ln:nth-of-type(3){animation-delay:1.2s}.ln:nth-of-type(4){animation-delay:1.8s}
+.sym{font:800 22px monospace;fill:var(--teal);opacity:.8;animation:float 6s ease-in-out infinite}
+.eye{animation:blink 4.5s infinite;transform-box:fill-box;transform-origin:center}
+.cur{animation:blinkc 1s steps(2) infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+@keyframes tap{to{transform:rotate(5deg)}}
+@keyframes type{0%{stroke-dashoffset:60}45%,85%{stroke-dashoffset:0}100%{stroke-dashoffset:-60}}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+@keyframes blinkc{50%{opacity:0}}
+@media(max-width:480px){.hero h2.t{font-size:1.5rem}}
 @keyframes up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 @keyframes slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
 @keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
 @keyframes shine{to{background-position:200% 0}}
-@keyframes pulse{50%{box-shadow:0 0 0 10px rgba(255,95,162,0)}0%{box-shadow:0 0 0 0 rgba(255,95,162,.6)}}
+@keyframes pulse{50%{box-shadow:0 0 0 10px rgba(20,180,242,0)}0%{box-shadow:0 0 0 0 rgba(20,180,242,.6)}}
 @keyframes drift{to{transform:translate(60px,50px) scale(1.15)}}
 @keyframes float{50%{transform:translateY(-28px) rotate(8deg)}}
 @keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
@@ -223,8 +245,38 @@ const shuffle = n => { const a = [...Array(n).keys()]; for (let i = n - 1; i > 0
 const fmt = ms => { const s = Math.max(0, Math.floor(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
 
 // ---------- home & student ----------
-const WELCOME = `<div class="brand"><div class="logo">&lt;/&gt; Code Start</div>
-  <p class="wel">أهلًا بيكم في Code Start مع بشمهندس عبدالله محمد<br>وأتمنى لكم التوفيق جميعًا</p></div>`;
+const WELCOME = `<div class="brand hero"><div class="logo">&lt;/&gt; Code Start</div>
+  <h2 class="t">منصة امتحانات <b>كورس البرمجة</b><br>لطلاب البكالوريا</h2>
+  <svg viewBox="0 0 440 300" aria-hidden="true">
+<ellipse cx="220" cy="278" rx="190" ry="14" fill="rgba(0,0,0,.22)"/>
+<text class="sym" x="30" y="70">&lt;/&gt;</text><text class="sym" x="360" y="50" style="animation-delay:-2s">{ }</text><text class="sym" x="385" y="170" style="animation-delay:-4s">=&gt;</text><text class="sym" x="10" y="170" style="animation-delay:-3s">( )</text>
+<g class="boy">
+<path d="M120 270c0-60 40-95 100-95s100 35 100 95z" fill="#173a8f"/>
+<path d="M190 178q30 22 60 0l-8 26q-22 12-44 0z" fill="#fff" opacity=".9"/>
+<rect x="198" y="150" width="44" height="32" rx="14" fill="#f2b48a"/>
+<circle cx="220" cy="118" r="46" fill="#f6c19a"/>
+<path d="M172 112c-8-40 20-62 52-58 34 0 54 26 44 62-10-22-26-30-48-30-22 0-38 10-48 26z" fill="#4a2a17"/>
+<circle cx="186" cy="74" r="14" fill="#4a2a17"/><circle cx="214" cy="62" r="16" fill="#4a2a17"/><circle cx="246" cy="68" r="15" fill="#4a2a17"/><circle cx="264" cy="90" r="12" fill="#4a2a17"/><circle cx="174" cy="98" r="11" fill="#4a2a17"/>
+<ellipse class="eye" cx="203" cy="120" rx="4" ry="5" fill="#1b1b2f"/><ellipse class="eye" cx="237" cy="120" rx="4" ry="5" fill="#1b1b2f"/>
+<path d="M205 138q15 14 30 0" stroke="#7a3b2a" stroke-width="4" fill="none" stroke-linecap="round"/>
+<circle cx="192" cy="134" r="6" fill="#ff9e8a" opacity=".5"/><circle cx="248" cy="134" r="6" fill="#ff9e8a" opacity=".5"/>
+</g>
+<g>
+<path d="M95 262l22-86h206l22 86z" fill="#cfd8ea"/>
+<rect x="118" y="176" width="204" height="12" fill="none"/>
+<path d="M125 270V196q0-14 14-14h162q14 0 14 14v74z" fill="none"/>
+<path d="M112 262l10-92q2-10 12-10h172q10 0 12 10l10 92z" fill="#e4ebf8"/>
+<rect x="130" y="172" width="180" height="84" rx="6" fill="#0a2a66"/>
+<g stroke="var(--teal)" stroke-width="5" stroke-linecap="round" fill="none"><path class="ln" d="M148 190h50"/><path class="ln" d="M160 206h80" stroke="#ffc83d"/><path class="ln" d="M160 222h56" stroke="#fff"/><path class="ln" d="M148 238h70"/></g>
+<rect class="cur" x="228" y="232" width="8" height="12" fill="var(--teal)"/>
+<path d="M92 262h256l8 10H84z" fill="#b9c6de"/>
+</g>
+<g class="arm"><rect x="150" y="215" width="58" height="22" rx="11" fill="#173a8f" transform="rotate(18 150 215)"/><circle cx="205" cy="246" r="12" fill="#f2b48a"/></g>
+<g class="arm" style="animation-delay:-.25s"><rect x="232" y="215" width="58" height="22" rx="11" fill="#173a8f" transform="rotate(-18 290 215)"/><circle cx="238" cy="246" r="12" fill="#f2b48a"/></g>
+<g transform="translate(330 215)"><rect width="90" height="16" rx="3" fill="#2f6dff"/><rect y="16" width="96" height="16" rx="3" fill="#1a8fe3"/><rect y="32" width="86" height="16" rx="3" fill="#ffc83d"/><text x="8" y="12" font-size="10" font-weight="700" fill="#fff" font-family="sans-serif">Python</text><text x="8" y="28" font-size="10" font-weight="700" fill="#fff" font-family="sans-serif">Web Dev</text><text x="8" y="44" font-size="10" font-weight="700" fill="#10306e" font-family="sans-serif">Algorithms</text></g>
+</svg>
+  <div class="chips"><span>📝 امتحانات أسبوعية</span><span>⏱ متابعة 24 ساعة</span><span>👨‍👩‍👦 تواصل مع أولياء الأمور</span><span>💻 مشاريع عملية</span></div>
+  <p class="wel">أهلًا بيك في Code Start 👋<br>ركّز، وخد وقتك، وبالتوفيق ليك</p></div>`;
 async function home() {
   $app.innerHTML = WELCOME + '<p class="muted" style="text-align:center">جاري تحميل الامتحانات...</p>';
   const snap = await db.collection('exams').orderBy('createdAt', 'desc').get();
@@ -254,8 +306,12 @@ async function student(id) {
   const roster = exam.roster || [], hasCodes = roster.some(r => r.c);
   $app.innerHTML = WELCOME + `<h1>${esc(exam.title)}</h1>
    <div class="card"><p>${exam.questions.length} سؤال · ${exam.minutes} دقيقة</p>
-   ${roster.length ? '<label>اختار اسمك من القايمة</label><select id="nm"><option value="">— اختار —</option>' + roster.map((r, i) => '<option value="' + i + '">' + esc(r.n) + '</option>').join('') + '</select>' + '' : '<label>اسمك بالكامل</label><input id="nm" autocomplete="name">'}
-   <p class="muted">العداد بيبدأ أول ما تضغط ابدأ، ولو عملت ريفرش هتكمل من مكانك. خروجك من صفحة الامتحان بيتسجل للمدرس. الامتحان بيتحل مرة واحدة بس، ولو دخلت تاني بنفس الاسم هتلاقي نتيجتك ومراجعتك.</p>
+   <div class="rules"><b>📌 تعليمات قبل ما تبدأ</b><ul>
+    <li>العداد بيبدأ أول ما تضغط «ابدأ الامتحان».</li>
+    <li>لو عملت ريفرش هتكمل من مكانك، والوقت بيفضل شغال.</li>
+    <li>خروجك من صفحة الامتحان بيتسجل للمدرس.</li>
+    <li>الامتحان بيتحل مرة واحدة بس، ولو دخلت تاني بنفس الاسم هتلاقي نتيجتك ومراجعتك.</li></ul></div>
+   ${roster.length ? '<label>اختار اسمك من القايمة</label><select id="nm"><option value="">— اختار —</option>' + roster.map((r, i) => '<option value="' + i + '">' + esc(r.n) + '</option>').join('') + '</select>' : '<label>اسمك بالكامل</label><input id="nm" autocomplete="name">'}
    <button id="go">ابدأ الامتحان</button><p id="e" class="err"></p></div>`;
   document.getElementById('go').onclick = async () => {
     const v = document.getElementById('nm').value.trim(), eb = document.getElementById('e');
@@ -458,14 +514,21 @@ async function dashboard() {
 // منع النسخ للطلاب فقط (مش في لوحة المدرس). ده بيمنع النسخ العادي بس، مش بيمنع الصور أو DevTools
 function lockCopy() {
   document.body.classList.add('nocopy');
-  const inField = t => t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
-  ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach(ev => document.addEventListener(ev, e => { if (!inField(e.target) && !inField(e.target.parentElement)) e.preventDefault(); }));
+  const blockAll = e => e.preventDefault();
+  // نسخ / قص / لصق / سحب / كليك يمين / تحديد: ممنوعين خالص (حتى جوه خانة الاسم)
+  ['copy', 'cut', 'paste', 'contextmenu', 'dragstart', 'drop', 'selectstart'].forEach(ev => document.addEventListener(ev, blockAll, true));
   document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && ['c', 'x', 'a', 'u', 's', 'p'].includes(e.key.toLowerCase()) && !inField(document.activeElement)) e.preventDefault();
-    if (e.key === 'F12' || e.key === 'PrintScreen') e.preventDefault();
-  });
+    const k = (e.key || '').toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'a', 'u', 's', 'p'].includes(k)) e.preventDefault();
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i', 'j', 'c'].includes(k)) e.preventDefault();
+    if (e.shiftKey && e.key === 'Insert') e.preventDefault();
+    if (e.key === 'F12') e.preventDefault();
+    if (e.key === 'PrintScreen') { e.preventDefault(); try { navigator.clipboard.writeText(''); } catch (_) {} }
+  }, true);
 }
-if (!params.has(ADMIN_KEY)) lockCopy();
+// الأدمن = اللينك فيه كلمة السر ومفيهوش ?exam. أي لينك امتحان (حتى لو حد ضاف كلمة الأدمن فيه) بيتقفل عليه النسخ
+const isAdminView = params.has(ADMIN_KEY) && !params.has('exam');
+if (!isAdminView) lockCopy();
 if (!firebaseConfig.projectId) setup();
 else if (typeof firebase === 'undefined') $app.innerHTML = WELCOME + '<p class="err" style="text-align:center">تعذر تحميل مكتبات Firebase. اتأكد من النت أو اقفل أي حاجب إعلانات وجرب تاني.</p>';
 else {
