@@ -60,6 +60,8 @@ a.ex:hover{transform:translateY(-5px);border-color:var(--teal);box-shadow:0 10px
 .rv{padding:4px 10px;border-radius:8px;margin:2px 0}
 .rv.c{background:rgba(52,211,153,.18);color:var(--ok);font-weight:700}
 .rv.w{background:rgba(255,107,129,.18);color:var(--bad)}
+.nocopy{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.nocopy input,.nocopy textarea,.nocopy select{-webkit-user-select:text;user-select:text}
 @keyframes up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 @keyframes slide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
 @keyframes pop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
@@ -93,7 +95,7 @@ const firebaseConfig = {
 // لينك موقعك على Netlify (بيتستخدم في اللينكات اللي بتتبعت للطلاب)
 const SITE_URL = 'https://code-start-academy.vercel.app/';
 // كلمة دخول المدرس في اللينك: SITE_URL?الكلمة. غيّرها لأي كلمة (حروف إنجليزي وأرقام وشرطة) وانت بس اللي تعرفها
-const ADMIN_KEY = 'cs-teacher-9f3k';
+const ADMIN_KEY = 'Abbdo';
 // ===============================================
 
 const $app = document.getElementById('app');
@@ -269,11 +271,12 @@ async function student(id) {
     }
     const data = { name, status: 'in_progress', startedAt: Date.now(), order: shuffle(exam.questions.length), answers: {}, leaves: 0,
       oo: Object.fromEntries(exam.questions.map((q, i) => [i, shuffle(q.options.length)])) };
-    const dref = ref.collection('results').doc(id), old = await dref.get();
+    const dref = ref.collection('results').doc(id);
     let rd = data;
-    if (old.exists) {
-      rd = old.data();
-    } else await dref.set(data);
+    try {
+      const old = await dref.get();
+      if (old.exists) rd = old.data(); else await dref.set(data);
+    } catch (e) { eb.textContent = 'تعذر بدء الامتحان: ' + e.message; return; }
     localStorage.setItem(key, JSON.stringify({ rid: id }));
     return rd.status === 'done' ? showResult(ref, exam, id, rd) : runExam(ref, exam, id, rd, key);
   };
@@ -301,15 +304,22 @@ function runExam(ref, exam, rid, data, key) {
       try { localStorage.setItem(lk, JSON.stringify(answers)); } catch (e) {}
       clearTimeout(t);
       document.getElementById('sv').textContent = '';
-      t = setTimeout(() => ref.collection('results').doc(rid).update({ answers }).then(() => document.getElementById('sv').textContent = 'تم حفظ إجاباتك'), 20000);
+      t = setTimeout(() => ref.collection('results').doc(rid).update({ answers }).then(() => document.getElementById('sv').textContent = 'تم حفظ إجاباتك').catch(() => {}), 20000);
     };
     qs.appendChild(d);
   });
   const finish = async () => {
-    if (finished) return; finished = true; clearInterval(timerId); document.removeEventListener('visibilitychange', onHide);
+    if (finished) return; finished = true; clearInterval(timerId); clearTimeout(t); document.removeEventListener('visibilitychange', onHide);
     let score = 0; exam.questions.forEach((q, i) => { if (answers[i] === q.correct) score++; });
     const upd = { status: 'done', answers, score, total: exam.questions.length, finishedAt: Date.now() };
-    await ref.collection('results').doc(rid).update(upd);
+    const doc = ref.collection('results').doc(rid);
+    try { await doc.update(upd); } catch (e) {
+      const cur = await doc.get().catch(() => null);
+      if (cur && cur.exists && cur.data().status === 'done') { try { localStorage.removeItem(lk); } catch (_) {} return showResult(ref, exam, rid, cur.data()); }
+      finished = false; document.addEventListener('visibilitychange', onHide);
+      alert('تعذر تسليم الامتحان: ' + e.message + '\nإجاباتك محفوظة على جهازك. اتأكد من النت واضغط تسليم الامتحان تاني.');
+      return;
+    }
     try { localStorage.removeItem(lk); } catch (e) {}
     showResult(ref, exam, rid, { ...data, ...upd });
   };
@@ -445,6 +455,17 @@ async function dashboard() {
 }
 
 // ---------- boot ----------
+// منع النسخ للطلاب فقط (مش في لوحة المدرس). ده بيمنع النسخ العادي بس، مش بيمنع الصور أو DevTools
+function lockCopy() {
+  document.body.classList.add('nocopy');
+  const inField = t => t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
+  ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart'].forEach(ev => document.addEventListener(ev, e => { if (!inField(e.target) && !inField(e.target.parentElement)) e.preventDefault(); }));
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && ['c', 'x', 'a', 'u', 's', 'p'].includes(e.key.toLowerCase()) && !inField(document.activeElement)) e.preventDefault();
+    if (e.key === 'F12' || e.key === 'PrintScreen') e.preventDefault();
+  });
+}
+if (!params.has(ADMIN_KEY)) lockCopy();
 if (!firebaseConfig.projectId) setup();
 else if (typeof firebase === 'undefined') $app.innerHTML = WELCOME + '<p class="err" style="text-align:center">تعذر تحميل مكتبات Firebase. اتأكد من النت أو اقفل أي حاجب إعلانات وجرب تاني.</p>';
 else {
